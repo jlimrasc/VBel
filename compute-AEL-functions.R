@@ -24,6 +24,7 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
     #' @param tild_lam  Vector, current iteration of lambda
     dF <- 0
     wi_arr <- c() # Store for use in D in P
+    vi_arr <- c() # Store for use in D in P
     for (i in 1:n) {
       wi <- as.vector((1 + t(tild_lam) %*% h_list[[i]]) ^-1)
       wi_arr[i] <- wi # Store in vector
@@ -35,9 +36,11 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
         vi <- 2 * n - n^2 / wi
       }
       
+      vi_arr[i] <- vi # Store in vector
       dF <- dF + vi * h_list[[i]]
     }
-    return(list(dF = dF, wi_arr = wi_arr))
+    #browser()
+    return(list(dF = dF, wi_arr = wi_arr, vi_arr = vi_arr))
   }
   
   # -----------------------------
@@ -54,7 +57,7 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
       if (wi_arr[i]^-1 >= 1/n) {
         vi2 <- wi_arr[i]
       } else {
-        vi2 <- n^2
+        vi2 <- n#^2
       }
       D_arr[i] <- vi2^2
     }
@@ -73,15 +76,19 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
   H_Zth <- c()
   for (i in 1:(n - 1)) {
     zi <- t(z[i,]) # Row of z as vertical vector
+    #browser()
     h_zith <- h(zi,th)
+    #browser()
     h_list[[i]] <- h_zith # Collect all h(zi,th) so no need to calculate again
+    #browser()
     h_sum <- h_sum + h_zith # For h(zn,th)
+    #browser()
     H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
   }
   h_znth <- -a / (n - 1) * h_sum
   H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
   h_list[[n]] <- h_znth
-  
+  #browser()
   # -----------------------------
   # Compute lambda using modified Newton-Raphson
   # -----------------------------
@@ -90,6 +97,9 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
     # dF
     dF_res <- get_dF(lam_prev)
     dF <- dF_res$dF
+    print(dF_res$wi_arr)
+    print(dF_res$vi_arr)
+    print("")
     
     # P
     P <- get_d2F(dF_res$wi_arr)
@@ -137,6 +147,7 @@ compute_AEL <- function(th, h, lam0, a, z, T) {
   # AEL Calculation
   # -----------------------------
   temp_accu <- 0
+  print(lambda)
   for (i in 1:n) {
     # print(c(i,t(lambda) %*% h_list[[i]]))
     temp <- log(1 + t(lambda) %*% h_list[[i]]) # FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -144,25 +155,3 @@ compute_AEL <- function(th, h, lam0, a, z, T) {
   }
   log_AEL <- -(temp_accu + n * log(n))
 }
-
-# -----------------------------
-# Main
-# -----------------------------
-set.seed(1)
-x    <- runif(30, min = -5, max = 5)
-elip <- rnorm(30, mean = 0, sd = 1)
-y    <- 0.75 - x + elip
-lam0 <- matrix(c(0,0), nrow = 2)
-th   <- matrix(c(0.75, -1), nrow = 2)
-a <- 0.001
-z    <- cbind(x, y)
-h    <- function(z, th) {
-  yi <- z[1]
-  xi <- z[2]
-  h_zith <- c(yi - th[1] - th[2] * xi)
-  h_zith[2] <- xi * h_zith[1]
-  matrix(h_zith, nrow = 2)
-}
-
-print(compute_AEL(th, h, lam0, a, z))
-
