@@ -19,5 +19,6 @@ h    <- function(z, th) {
   matrix(h_zith, nrow = 2)
 }
 
-print(compute_AEL(th, h, lam0, a, z))
+ans <-compute_AEL(th, h, lam0, a, z)
 
+ans
