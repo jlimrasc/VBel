@@ -1,4 +1,4 @@
-compute_lambda <- function(th, h, lam0, a, z, T, n) {
+compute_lambda <- function(h_list, H_Zth, lam0, a, T, n) {
   #' Computes lambda T for AEL for a specific set of user-inputted variables
   #' 
   #' @description 
@@ -8,13 +8,12 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
   #' @details 
   #' juicy deets
   #' 
-  #' @param th    Vector or scalar
-  #' @param h     User-defined function, outputs array
-  #' @param lam0  Initial vector for lambda
-  #' @param a     Scalar constant
-  #' @param z     n-1 by d matrix
-  #' @param T     Number of iterations using Newton-Raphson for estimation of lambda
-  #' @param n     Height/Width of z + 1
+  #' @param h_list  List of h(z1,th) to h(zn,th)
+  #' @param H_Zth   Hessian matrix H
+  #' @param lam0    Initial vector for lambda
+  #' @param a       Scalar constant
+  #' @param T       Number of iterations using Newton-Raphson for estimation of lambda
+  #' @param n       Height/Width of z + 1
 
   ## Functions  
   
@@ -77,28 +76,6 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
     
     P
   }
-  
-  # -----------------------------
-  # Starting variables (h(zi,th), h(zn,th), H)
-  # -----------------------------
-  h_list <- list() # Initialise
-  h_sum <- 0
-  H_Zth <- c()
-  
-  for (i in 1:(n - 1)) {
-    zi <- t(z[i,]) # Row of z as vertical vector
-    h_zith <- h(zi,th)
-    
-    h_list[[i]] <- h_zith # Collect all h(zi,th) so no need to calculate again
-    
-    h_sum <- h_sum + h_zith # For h(zn,th)
-    H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
-  }
-  
-  h_znth <- -a / (n - 1) * h_sum
-  H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
-  
-  h_list[[n]] <- h_znth
 
   # -----------------------------
   # Compute lambda using modified Newton-Raphson
@@ -117,7 +94,7 @@ compute_lambda <- function(th, h, lam0, a, z, T, n) {
   }
   lambdaT <- lam_prev # Final lambda
   
-  return(list(lambda = lambdaT, h_store = h_list))
+  lambdaT
 }  
   
 compute_AEL <- function(th, h, lam0, a, z, T) {
@@ -145,13 +122,34 @@ compute_AEL <- function(th, h, lam0, a, z, T) {
   }
   
   # -----------------------------
+  # Starting variables (h(zi,th), h(zn,th), H)
+  # -----------------------------
+  h_list <- list() # Initialise
+  h_sum <- 0
+  H_Zth <- c()
+  
+  n <- nrow(z) + 1
+  
+  for (i in 1:(n - 1)) {
+    zi <- t(z[i,]) # Row of z as vertical vector
+    h_zith <- h(zi,th)
+    
+    h_list[[i]] <- h_zith # Collect all h(zi,th) so no need to calculate again
+    
+    h_sum <- h_sum + h_zith # For h(zn,th)
+    H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
+  }
+  
+  h_znth <- -a / (n - 1) * h_sum
+  H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
+  
+  h_list[[n]] <- h_znth
+  
+  # -----------------------------
   # Lambda Calculation
   # -----------------------------
-  n <- nrow(z) + 1
-  lam_res <- compute_lambda(th, h, lam0, a, z, T, n)
-  lambda <- lam_res$lambda
-  h_list <- lam_res$h_store
-  
+  lambda <- compute_lambda(h_list, H_Zth, lam0, a, T, n)
+
   # -----------------------------
   # AEL Calculation
   # -----------------------------
