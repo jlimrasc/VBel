@@ -87,7 +87,7 @@ compute_lambda <- function(h_list, H_Zth, lam0, a, T, n) {
     
     # dF
     dF <- get_dF(wi_arr)
-
+    
     # P
     P <- get_d2F(wi_arr)
     lam_prev <- lam_prev - solve(P) %*% dF
