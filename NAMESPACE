@@ -1,0 +1,3 @@
+useDynLib(VBel)
+importFrom(Rcpp, evalCpp)
+export("Rcpp.fake.fun")
