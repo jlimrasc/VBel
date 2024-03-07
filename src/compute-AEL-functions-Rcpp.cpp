@@ -7,7 +7,8 @@ using Eigen::MatrixXd;      // variable size martix, double precision
 using Eigen::VectorXd;      // variable size martix, double precision
 using Eigen::DiagonalMatrix;// diagonal matrix
 using namespace std;
-// using namespace Rcpp;
+using namespace Rcpp;
+using namespace RcppEigen;
 
 // This is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp 
@@ -20,7 +21,7 @@ using namespace std;
 //
 
 // Functions
-VectorXd get_wi_arr_Rcpp(vector<VectorXd> h_list, VectorXd tild_lam, int n) {
+Eigen::VectorXd get_wi_arr_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::VectorXd tild_lam, int n) {
     // Store wi for use in D in P
     VectorXd wi_arr(n);
     for (int i = 0; i < n; i++) {
@@ -32,7 +33,7 @@ VectorXd get_wi_arr_Rcpp(vector<VectorXd> h_list, VectorXd tild_lam, int n) {
 // -----------------------------
 // Compute dF
 // -----------------------------
-VectorXd get_dF_Rcpp(vector<VectorXd> h_list, VectorXd wi_arr, int n, int d) {
+Eigen::VectorXd get_dF_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::VectorXd wi_arr, int n, int d) {
     // #' @param wi_arr Array of vectors of wi(th, lam~)
     double wi, vi;
     VectorXd dF = VectorXd::Zero(d);
@@ -54,12 +55,12 @@ VectorXd get_dF_Rcpp(vector<VectorXd> h_list, VectorXd wi_arr, int n, int d) {
 // -----------------------------
 // Compute d2F
 // -----------------------------
-MatrixXd get_d2F_Rcpp(vector<VectorXd> h_list, MatrixXd H_Zth, VectorXd wi_arr, int n, int d) {
+Eigen::MatrixXd get_d2F_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixXd H_Zth, Eigen::VectorXd wi_arr, int n, int d) {
     // Build diagonal matrix
     // Diagonal matrix changes with respect to lambda's current guess so need 
     // to recompute each iteration
-    VectorXd D_arr(n);
-    MatrixXd P(d,d), D(n,n);
+    Eigen::VectorXd D_arr(n);
+    Eigen::MatrixXd P(d,d), D(n,n);
     double wi, vi2;
     
     // Evaluate vi2
@@ -80,7 +81,7 @@ MatrixXd get_d2F_Rcpp(vector<VectorXd> h_list, MatrixXd H_Zth, VectorXd wi_arr, 
 
 
 // [[Rcpp::export]]
-MatrixXd compute_lambda_Rcpp(vector<VectorXd> h_list, MatrixXd H_Zth, VectorXd lam0, double a, int T, int n, int d) {
+Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, double a, int T, int n, int d) {
     // # -----------------------------
     // # Compute lambda using modified Newton-Raphson
     // # -----------------------------
@@ -97,45 +98,14 @@ MatrixXd compute_lambda_Rcpp(vector<VectorXd> h_list, MatrixXd H_Zth, VectorXd l
         
         lam_prev = lam_prev - P.inverse() * dF;
         
-        // cout << i << " " << dF << " " << P << " " << lam_prev << endl;
     }
     
     return lam_prev;
 }
 
-// [[Rcpp::export]]
-double compute_AEL_Rcpp(VectorXd th, Rcpp::Function h, 
-                        VectorXd lam0, double a, MatrixXd z, int T = 100) {
-    // # -----------------------------
-    // # Default values
-    // # -----------------------------
-    //       if (missing(T)) {
-    //         T <- 100
-    //       }
-    //       
-    // # -----------------------------
-    // # Starting variables (h(zi,th), h(zn,th), H)
-    // # -----------------------------
-    int n = z.rows() + 1;
-    int d = z.cols();
-    vector<VectorXd> h_list(n);
-    MatrixXd H_Zth(n,d), h_znth(1, 2);
-    VectorXd h_zith(d);
-    
-    for (int i = 0; i < n - 1; i++) {
-        h_zith = Rcpp::as<VectorXd>(h(z.row(i).transpose(), th)); // Might be slower,
-        // use R to build instead?
-        h_list[i] = h_zith;
-        
-        H_Zth.row(i) = h_zith.transpose();
-    }
-    
-    // Need brackets around  fraction for some reason? Maybe matrix mult takes priority?
-    h_znth = -(a / (n - 1)) * H_Zth.colwise().sum();
-    H_Zth.row(n - 1) = h_znth;
-    
-    h_list[n - 1] = h_znth.row(0);
-    
+double compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list, 
+                                   Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, 
+                                   double a, int T, int n, int d) {
     // -----------------------------
     // Lambda Calculation
     // -----------------------------
@@ -152,6 +122,54 @@ double compute_AEL_Rcpp(VectorXd th, Rcpp::Function h,
     log_AEL = -(accum + n * log(n));
     
     return log_AEL;
+}
+
+// [[Rcpp::export]]
+double compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h, 
+                              Eigen::VectorXd lam0, double a, Eigen::MatrixXd z,
+                              int T = 100) {
+    // # -----------------------------
+    // # Starting variables (h(zi,th), h(zn,th), H)
+    // # -----------------------------
+    int n = z.rows() + 1;
+    int d = z.cols();
+    vector<VectorXd> h_list(n);
+    MatrixXd H_Zth(n,d), h_znth(1, 2);
+    VectorXd h_zith(d);
+    
+    for (int i = 0; i < n - 1; i++) {
+        h_zith = Rcpp::as<VectorXd>(h(z.row(i).transpose(), th)); // Costly to call R functions
+        
+        h_list[i] = h_zith;
+        
+        H_Zth.row(i) = h_zith.transpose();
+    }
+    
+    // Need brackets around  fraction for some reason? Maybe matrix mult takes priority?
+    h_znth = -(a / (n - 1)) * H_Zth.colwise().sum();
+    H_Zth.row(n - 1) = h_znth;
+    
+    h_list[n - 1] = h_znth.row(0);
+    
+    return compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+}
+
+// [[Rcpp::export]]
+double compute_AEL_Rcpp_inner_prez(Eigen::VectorXd th, Eigen::MatrixXd H_Zth, 
+                                   Eigen::VectorXd lam0, double a, 
+                                   Eigen::MatrixXd z, int T = 100) {
+    // No R function call, so faster
+    
+    // Calculate h_list for simpler calculations later
+    int n = z.rows() + 1;
+    int d = z.cols();
+    vector<VectorXd> h_list(n);
+    
+    for (int i = 0; i < n; i++) {
+        h_list[i] = H_Zth.row(i).transpose();
+    }
+    
+    return compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
 }
 
 /*** R
@@ -178,7 +196,7 @@ h    <- function(z, th) {
 #   
 # }
 # ans <-tester(th, h, lam0, a, z)
-ans <-compute_AEL_Rcpp(th, h, lam0, a, z)
+ans <-compute_AEL_Rcpp_inner(th, h, lam0, a, z)
 
 
 ans
