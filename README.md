@@ -29,9 +29,9 @@ and follow the instructions.<br />
 &nbsp; &nbsp;&nbsp;
 4. Open the dmg file, run the gfortran installer, follow all the instructions.
 
-An alternative recommended method is to use the packet manager [Homebrew](https://docs.brew.sh/Installation): <br />
-&nbsp;
+An alternative recommended method is to use the packet manager [Homebrew](https://docs.brew.sh/Installation):
 
+&nbsp;
 1. Check if you have homebrew with
 ```{eval=FALSE}
 $ brew doctor
@@ -53,7 +53,7 @@ brew install gcc
 # Installation
 ```{r}
 # Install the development version from GitHub:
-# install.packages("devtools")
+install.packages("devtools")
 devtools::install_github("jlimrasc/VBel")
 ```
 
