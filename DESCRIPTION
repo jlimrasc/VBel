@@ -1,0 +1,14 @@
+Package: VBel
+Type: Package
+Title: What the package does (short line)
+Version: 1.0
+Date: 2024-03-07
+Author: Dr. Wei-Chang Yu, Jeremy Lim
+Maintainer: Jeremy Lim <jeremy.lim@unimelb.edu.au>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+Imports: Rcpp (>= 1.0.12)
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 7.3.1
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
