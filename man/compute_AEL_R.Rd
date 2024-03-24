@@ -4,20 +4,22 @@
 \alias{compute_AEL_R}
 \title{Computes Accurate Empirical Likelihood Interference for a data set using R}
 \usage{
-compute_AEL_R(th, h, lam0, a, z, T)
+compute_AEL_R(th, h, lam0, a, z, T, returnH)
 }
 \arguments{
-\item{th}{Vector or scalar}
+\item{th}{Vector or scalar theta, kx1 matrix}
 
-\item{h}{User-defined function, outputs array}
+\item{h}{User-defined moment-condition function, outputs a kx1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)}
 
-\item{lam0}{Initial vector for lambda}
+\item{lam0}{Initial guess for lambda, kx1 matrix}
 
-\item{a}{Scalar constant}
+\item{a}{Scalar AEL constant, must be >0, small values recommended}
 
-\item{z}{n-1 by d matrix}
+\item{z}{n-1 by d data matrix}
 
-\item{T}{Number of iterations using Newton-Raphson for estimation of lambda (default: 100)}
+\item{T}{Number of iterations using Newton-Raphson for estimation of lambda (default: 500)}
+
+\item{returnH}{Whether to return calculated values of h, H matrix and lambda}
 }
 \value{
 The AEL of the data set

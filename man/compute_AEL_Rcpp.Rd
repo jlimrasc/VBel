@@ -18,9 +18,9 @@ compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz)
 
 \item{z}{n-1 by d matrix}
 
-\item{T}{Number of iterations using Newton-Raphson for estimation of lambda (default: 100)}
+\item{T}{Number of iterations using Newton-Raphson for estimation of lambda (default: 500)}
 
-\item{useR_forz}{Bool whether to calculate the function first in R (True) or call the function in C (False) (default: False)}
+\item{useR_forz}{Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)}
 }
 \value{
 The AEL of the data set
