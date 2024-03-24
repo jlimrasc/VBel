@@ -10,8 +10,8 @@
 #' @param lam0      Initial vector for lambda
 #' @param a         Scalar constant
 #' @param z         n-1 by d matrix
-#' @param T         Number of iterations using Newton-Raphson for estimation of lambda (default: 100)
-#' @param useR_forz Bool whether to calculate the function first in R (True) or call the function in C (False) (default: False)
+#' @param T         Number of iterations using Newton-Raphson for estimation of lambda (default: 500)
+#' @param useR_forz Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)
 #'
 #' @return The AEL of the data set
 #' @export
@@ -24,10 +24,10 @@ compute_AEL_Rcpp <- function(th, h, lam0, a, z, T, useR_forz) {
     # Default values
     # -----------------------------
     if (missing(T)) {
-        T <- 100
+        T <- 500
     }
     if (missing(useR_forz)){
-        useR_forz <- FALSE
+        useR_forz <- TRUE
     }
     
     if (!useR_forz) {
