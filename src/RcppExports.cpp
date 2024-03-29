@@ -60,6 +60,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_GVA_Rcpp_inner
+std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner(double rho, double elip, Eigen::VectorXd Egmu, Eigen::VectorXd Edelmu, Eigen::MatrixXd EgC, Eigen::MatrixXd EdelC, Eigen::VectorXd gmu, Eigen::VectorXd mu_t, Eigen::MatrixXd C_t, Eigen::MatrixXd xi, Eigen::MatrixXd M, int p, int i);
+RcppExport SEXP _VBel_compute_GVA_Rcpp_inner(SEXP rhoSEXP, SEXP elipSEXP, SEXP EgmuSEXP, SEXP EdelmuSEXP, SEXP EgCSEXP, SEXP EdelCSEXP, SEXP gmuSEXP, SEXP mu_tSEXP, SEXP C_tSEXP, SEXP xiSEXP, SEXP MSEXP, SEXP pSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type elip(elipSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Egmu(EgmuSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type Edelmu(EdelmuSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type EgC(EgCSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type EdelC(EdelCSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type gmu(gmuSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type mu_t(mu_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type C_t(C_tSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_GVA_Rcpp_inner(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcppeigen_hello_world
 Eigen::MatrixXd rcppeigen_hello_world();
 RcppExport SEXP _VBel_rcppeigen_hello_world() {
@@ -108,6 +131,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_VBel_compute_lambda_Rcpp", (DL_FUNC) &_VBel_compute_lambda_Rcpp, 7},
     {"_VBel_compute_AEL_Rcpp_inner", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner, 6},
     {"_VBel_compute_AEL_Rcpp_inner_prez", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner_prez, 6},
+    {"_VBel_compute_GVA_Rcpp_inner", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner, 13},
     {"_VBel_rcppeigen_hello_world", (DL_FUNC) &_VBel_rcppeigen_hello_world, 0},
     {"_VBel_rcppeigen_outerproduct", (DL_FUNC) &_VBel_rcppeigen_outerproduct, 1},
     {"_VBel_rcppeigen_innerproduct", (DL_FUNC) &_VBel_rcppeigen_innerproduct, 1},

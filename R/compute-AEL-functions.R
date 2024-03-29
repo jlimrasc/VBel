@@ -4,18 +4,34 @@
 #' `compute_AEL` returns the result of running AEL with the values present in
 #' the arguments.
 #'
-#' @param th        Vector or scalar theta, kx1 matrix
-#' @param h         User-defined moment-condition function, outputs a kx1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)
-#' @param lam0      Initial guess for lambda, kx1 matrix
+#' @param th        Vector or scalar theta, k x 1 matrix
+#' @param h         User-defined moment-condition function, outputs a k x 1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)
+#' @param lam0      Initial guess for lambda, k x 1 matrix
 #' @param a         Scalar AEL constant, must be >0, small values recommended
-#' @param z         n-1 by d data matrix
+#' @param z         Data matrix, n-1 x d matrix
 #' @param T         Number of iterations using Newton-Raphson for estimation of lambda (default: 500)
 #' @param returnH   Whether to return calculated values of h, H matrix and lambda
 #'
 #' @return The AEL of the data set
 #' @export
 #'
-#' @examples compute_AEL_R(matrix(c(0.8277, -1.0050), nrow = 2), function(z, th) {matrix(c(z[2] - th[1] - th[2] * z[1], z[1]*(z[2] - th[1] - th[2] * z[1])), nrow = 2)}, matrix(c(0,0), nrow = 2), 0.001, cbind(runif(30, min = -5, max = 5), 0.75 - runif(30, min = -5, max = 5) + rnorm(30, mean = 0, sd = 1)))
+#' @examples
+#' set.seed(1)
+#' x    <- runif(30, min = -5, max = 5)
+#' elip <- rnorm(30, mean = 0, sd = 1)
+#' y    <- 0.75 - x + elip
+#' lam0 <- matrix(c(0,0), nrow = 2)
+#' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' a <- 0.001
+#' z    <- cbind(x, y)
+#' h    <- function(z, th) {
+#'     xi <- z[1]
+#'     yi <- z[2]
+#'     h_zith <- c(yi - th[1] - th[2] * xi)
+#'     h_zith[2] <- xi * h_zith[1]
+#'     matrix(h_zith, nrow = 2)
+#' }
+#' ans <- compute_AEL_R(th, h, lam0, a, z)
 
 compute_AEL_R <- function(th, h, lam0, a, z, T, returnH) {
     # -----------------------------
@@ -96,8 +112,7 @@ compute_lambda <- function(h_arr, H_Zth, lam0, a, T, n) {
         wi_arr <- c() # Store for use in D in P
         for (i in 1:n) {
             # store as vector so can use in multiplication later, if not it fails
-            wi_arr[i] <-
-                as.vector((1 + t(tild_lam) %*% h_arr[,,i]) ^ -1)
+            wi_arr[i] <- as.vector((1 + t(tild_lam) %*% h_arr[,,i]) ^ -1)
         }
         
         wi_arr

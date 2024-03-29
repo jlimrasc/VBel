@@ -13,6 +13,10 @@ compute_AEL_Rcpp_inner_prez <- function(th, H_Zth, lam0, a, z, T = 100L) {
     .Call(`_VBel_compute_AEL_Rcpp_inner_prez`, th, H_Zth, lam0, a, z, T)
 }
 
+compute_GVA_Rcpp_inner <- function(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i) {
+    .Call(`_VBel_compute_GVA_Rcpp_inner`, rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i)
+}
+
 rcppeigen_hello_world <- function() {
     .Call(`_VBel_rcppeigen_hello_world`)
 }

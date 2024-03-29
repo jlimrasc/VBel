@@ -13,11 +13,11 @@ compute_GVA_R(
   z,
   rho,
   elip,
-  T,
-  T2,
   theta,
   lam0,
-  a
+  a,
+  T,
+  T2
 )
 }
 \arguments{
@@ -25,27 +25,27 @@ compute_GVA_R(
 
 \item{C}{Lower Triangular Matrix, initial value of Gaussian VB Cholesky}
 
-\item{h}{User-defined moment-condition function, outputs a kx1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)}
+\item{h}{User-defined moment-condition function, outputs a k x 1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)}
 
-\item{delthh}{User defined function, outputs kxp Jacobian matrix of h(zi,th) with respect to theta}
+\item{delthh}{User defined function, outputs k x p Jacobian matrix of h(zi,th) with respect to theta}
 
-\item{delth_logpi}{User-defined function, outputs px1 matrix, derivative of log prior function}
+\item{delth_logpi}{User-defined function, outputs p x 1 matrix, derivative of log prior function}
 
-\item{z}{n-1 by d data matrix}
+\item{z}{Data matrix, n-1 x d matrix}
 
 \item{rho}{Scalar (0 <~ 1) ADADELTA accumulation constant}
 
 \item{elip}{Scalar numeric stability constant. Should be specified with a small value}
 
-\item{T}{number of iterations for GVA (default:10,000)}
-
-\item{T2}{number of iterations for Log AEL (default:500)}
-
-\item{lam0}{Initial guess for lambda, kx1 matrix}
+\item{lam0}{Initial guess for lambda, k x 1 matrix}
 
 \item{a}{Scalar AEL constant, must be >0, small values recommended}
 
-\item{th}{Vector or scalar theta, kx1 matrix}
+\item{T}{Number of iterations for GVA (default:10,000)}
+
+\item{T2}{Number of iterations for Log AEL (default:500)}
+
+\item{th}{Vector or scalar theta, k x 1 matrix}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{        List of mu_FC and C_FC. Access using those names.
@@ -53,4 +53,8 @@ compute_GVA_R(
 }
 \description{
 Computes Full-Covariance Gaussian VB posterior in R
+}
+\examples{
+# example code
+
 }

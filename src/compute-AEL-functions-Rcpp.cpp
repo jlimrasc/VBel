@@ -1,6 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
-// [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
 #include <stdio.h>
 #include <cmath>
 using Eigen::MatrixXd;      // variable size martix, double precision
