@@ -103,7 +103,7 @@ Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::
     return lam_prev;
 }
 
-double compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list, 
+Rcpp::List compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list, 
                                    Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, 
                                    double a, int T, int n, int d) {
     // -----------------------------
@@ -121,13 +121,17 @@ double compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list,
     }
     log_AEL = -(accum + n * log(n));
     
-    return log_AEL;
+    return Rcpp::List::create(
+        Rcpp::Named("log_AEL")  = log_AEL,
+        Rcpp::Named("lambda")   = lambda
+    );
+    
 }
 
 // [[Rcpp::export]]
-double compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h, 
+Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h, 
                               Eigen::VectorXd lam0, double a, Eigen::MatrixXd z,
-                              int T = 100) {
+                              int T = 500) {
     // # -----------------------------
     // # Starting variables (h(zi,th), h(zn,th), H)
     // # -----------------------------
@@ -151,13 +155,16 @@ double compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     
     h_list[n - 1] = h_znth.row(0);
     
-    return compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+    Rcpp::List res = compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+    res.push_back(h_list, "h_arr");
+    res.push_back(H_Zth, "H_Zth");
+    return res;
 }
 
 // [[Rcpp::export]]
-double compute_AEL_Rcpp_inner_prez(Eigen::VectorXd th, Eigen::MatrixXd H_Zth, 
+Rcpp::List compute_AEL_Rcpp_inner_prez(Eigen::VectorXd th, Eigen::MatrixXd H_Zth, 
                                    Eigen::VectorXd lam0, double a, 
-                                   Eigen::MatrixXd z, int T = 100) {
+                                   Eigen::MatrixXd z, int T = 500) {
     // No R function call, so faster
     
     // Calculate h_list for simpler calculations later

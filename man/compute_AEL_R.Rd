@@ -44,5 +44,5 @@ h    <- function(z, th) {
     h_zith[2] <- xi * h_zith[1]
     matrix(h_zith, nrow = 2)
 }
-ans <-compute_AEL_R(th, h, lam0, a, z)
+ans <- compute_AEL_R(th, h, lam0, a, z)
 }

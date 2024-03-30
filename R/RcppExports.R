@@ -5,16 +5,20 @@ compute_lambda_Rcpp <- function(h_list, H_Zth, lam0, a, T, n, d) {
     .Call(`_VBel_compute_lambda_Rcpp`, h_list, H_Zth, lam0, a, T, n, d)
 }
 
-compute_AEL_Rcpp_inner <- function(th, h, lam0, a, z, T = 100L) {
+compute_AEL_Rcpp_inner <- function(th, h, lam0, a, z, T = 500L) {
     .Call(`_VBel_compute_AEL_Rcpp_inner`, th, h, lam0, a, z, T)
 }
 
-compute_AEL_Rcpp_inner_prez <- function(th, H_Zth, lam0, a, z, T = 100L) {
+compute_AEL_Rcpp_inner_prez <- function(th, H_Zth, lam0, a, z, T = 500L) {
     .Call(`_VBel_compute_AEL_Rcpp_inner_prez`, th, H_Zth, lam0, a, z, T)
 }
 
-compute_GVA_Rcpp_inner <- function(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i) {
-    .Call(`_VBel_compute_GVA_Rcpp_inner`, rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i)
+compute_GVA_Rcpp_inner_IVtoXII <- function(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i) {
+    .Call(`_VBel_compute_GVA_Rcpp_inner_IVtoXII`, rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i)
+}
+
+compute_GVA_Rcpp_inner_full <- function(mu, C, h, delthh, delth_logpi, z, lam0, xi, rho, elip, a, T, T2, p, rFuncs) {
+    .Call(`_VBel_compute_GVA_Rcpp_inner_full`, mu, C, h, delthh, delth_logpi, z, lam0, xi, rho, elip, a, T, T2, p, rFuncs)
 }
 
 rcppeigen_hello_world <- function() {

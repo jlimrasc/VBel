@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
-using Eigen::MatrixXd;      // variable size martix, double precision
-using Eigen::VectorXd;      // variable size martix, double precision
-using Eigen::VectorXi;      // variable size martix, integer precision
-using Eigen::DiagonalMatrix;// diagonal matrix
-using namespace std;
+#include "compute-AEL-functions-Rcpp.h"
+// using Eigen::MatrixXd;      // variable size martix, double precision
+// using Eigen::VectorXd;      // variable size martix, double precision
+// using Eigen::VectorXi;      // variable size martix, integer precision
+// using Eigen::DiagonalMatrix;// diagonal matrix
+// using namespace std;
 using namespace Rcpp;
 using namespace RcppEigen;
 
@@ -33,12 +34,45 @@ Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, 
 //     nabC_ELBO <- gmu %*% t(xi) + diag(1/diag(C_t))
 // }
 
+Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Function delthh, 
+                                        Eigen::VectorXd theta, Rcpp::Function h, 
+                                        Eigen::VectorXd lam0, Eigen::MatrixXd z, 
+                                        int n, double a, int p, int T2) {
+    Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+    Eigen::MatrixXd lambda              = res["lambda"];
+    std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
+    Eigen::VectorXd hznth               = h_arr[n-1];
+//     
+    // Calculate gradient LogAEL with respect to theta
+    Eigen::VectorXd nabth_logAEL = Eigen::VectorXd::Zero(p); // Vector
+    Eigen::MatrixXd delthh_zith;
+    for (int i = 0; i < n-1; i++) {
+        nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array())) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
+    }
+    
+    Eigen::VectorXd nabmu_ELBO = (nabth_logAEL.array() + Rcpp::as<Eigen::VectorXd>(delth_logpi(theta)).array()).matrix();
+    return nabmu_ELBO;
+}
+// compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
+//     res <- compute_AEL_R(theta, h, lam0, a, z, T2, 1) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+//     lambda <- res$"lambda"
+//     h_arr <- res$"h_arr"
+//     hznth <- h_arr[,,n]
+//     
+// # Calculate gradient LogAEL with respect to theta
+//     nabth_logAEL <- 0 # Matrix
+//     for (i in 1:(n-1)) {
+//         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(z[i], theta)) %*% lambda)
+//     }
+//     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
+// }
+
 
 // [[Rcpp::export]]
-std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner(double rho, double elip, Eigen::VectorXd Egmu, Eigen::VectorXd Edelmu, 
+std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, const double elip, Eigen::VectorXd Egmu, Eigen::VectorXd Edelmu, 
                                        Eigen::MatrixXd EgC, Eigen::MatrixXd EdelC, Eigen::VectorXd gmu, 
                                        Eigen::VectorXd mu_t, Eigen::MatrixXd C_t, 
-                                       Eigen::MatrixXd xi, Eigen::MatrixXd M, int p, int i) {
+                                       const Eigen::MatrixXd xi, Eigen::MatrixXd M, const int p, const int i) {
     
     Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
     Eigen::VectorXd delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
@@ -59,28 +93,87 @@ std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner(double rho, double elip, Eig
     return res;
 }
     
-    
-    
-    // # -----------------------------
-    // # Compute lambda using modified Newton-Raphson
-    // # -----------------------------
-    // VectorXd lam_prev = lam0;
-    // VectorXd wi_arr(n), dF(d);
-    // MatrixXd P(d,d);
-    // 
-    // for (int i = 0; i < T; i++) {
-    //     wi_arr = get_wi_arr_Rcpp(h_list, lam_prev, n); // Wi
-    //     
-    //     dF = get_dF_Rcpp(h_list, wi_arr, n, d); // dF
-    //     
-    //     P = get_d2F_Rcpp(h_list, H_Zth, wi_arr, n, d); // d2F
-    //     
-    //     lam_prev = lam_prev - P.inverse() * dF;
-    //     
-    // }
-    
-    // return lam_prev;
+// [[Rcpp::export]]
+Rcpp::List compute_GVA_Rcpp_inner_full(
+        Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh,
+        Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, Eigen::MatrixXd xi, 
+        double rho, double elip, double a, int T, int T2, int p, bool rFuncs){
 
+    Eigen::VectorXd Egmu    = Eigen::VectorXd::Zero(p);
+    Eigen::VectorXd Edelmu  = Eigen::VectorXd::Zero(p);
+    Eigen::MatrixXd EgC     = Eigen::MatrixXd::Zero(p,p);
+    Eigen::MatrixXd EdelC   = Eigen::MatrixXd::Zero(p,p);
+    Eigen::VectorXd mu_t    = mu;
+    Eigen::MatrixXd mu_arr  = Eigen::MatrixXd::Zero(p,T+1);
+    mu_arr.col(0)           = mu_t; // Can save row vector to column?
+    Eigen::MatrixXd C_t     = C;        // Covariance Cholesky
+    std::vector<Eigen::MatrixXd> C_arr = {C_t}; // No preallocation?
+    Eigen::MatrixXd M       = Eigen::MatrixXd::Ones(p,p);
+    int n                   = z.rows() + 1;
+    Eigen::VectorXd delmu;
+    Eigen::MatrixXd gC_t, delC;
+    
+    for (int i = 0; i < T; i++) {
+        Eigen::VectorXd th      = mu_t + C_t * xi.row(i);                    // II    - Set theta
+        Eigen::VectorXd gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
+                                                      lam0, z, n, a, p, T2);
+        
+        Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
+        delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
+        mu_t = mu_t + delmu;                                        // VI    - Update mean
+        Edelmu = rho * Edelmu + (1 - rho) * delmu.cwiseProduct(delmu);      // VII   - Accumulate updates
+        gC_t = (compute_nabC_ELBO_Rcpp(gmu, xi.row(i), C_t)).triangularView<Eigen::Lower>();          // VIII  - Compute g_C^{t+1}
+        EgC = rho * EgC + (1 - rho) * gC_t.cwiseProduct(gC_t);           // IX    - Accumulate gradients
+        delC    = ((EdelC + elip * M).cwiseSqrt().array() / (EgC + elip * M).cwiseSqrt().array() * gC_t.array()).matrix();     // X     - Compute update
+        C_t     = C_t + delC;                            // XI    - Update covariance Cholesky
+        EgC     = rho * EgC + (1 - rho) * delC.cwiseProduct(delC);        // XII   - Accumulate updates
+        
+        // Store
+        mu_arr.col(i+1) = mu_t;
+        C_arr.push_back(C_t);
+    }
+    
+    // return Rcpp::List::create(
+    //         Rcpp::Named("mu_t") = mu_t,
+    //         Rcpp::Named("C_t") = C_t);
+    // cout << gC_t << endl;
+    Rcpp::List res = Rcpp::List::create(
+        _["mu_t"]   = mu_t,
+        _["C_t"]    = C_t,
+        _["mu_arr"] = mu_arr,
+        _["C_arr"]  = C_arr,
+        _["Egmu"]   = Egmu,
+        _["delmu"]  = delmu, 
+        _["Edelmu"] = Edelmu, 
+        _["gC_t"]   = gC_t, 
+        _["EgC"]    = EgC, 
+        _["delC"]   = delC
+    );
+    // std::vector<Eigen::MatrixXd> res = {mu_t, C_t, mu_arr, C_arr, Egmu, delmu, Edelmu, gC_t, EgC, delC};
+    // std::vector<int> v = {(gmu * xi.row(i)).rows(), (gmu * xi.row(i)).cols(), gC_t.rows(), gC_t.cols(), gmu.rows(), gmu.cols(), xi.row(i).rows(), xi.row(i).cols()};
+    return res;
+}
+    
+// compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, rho, elip, lam0, a, T, T2) {
+// # Initialise values
+// if (missing(T)) { T <- 10000 }
+// if (missing(T2)) { T2 <- 500 }
+// 
+// p           <- nrow(C)
+// Egmu        <- numeric(p)
+// Edelmu      <- numeric(p)
+// EgC         <- matrix(0, nrow = p, ncol = p)
+// EdelC       <- matrix(0, nrow = p, ncol = p)
+// mu_t        <- mu
+// mu_arr      <- matrix(0,nrow = p, ncol = T+1)#array(dim = c(dim(mu_t), T+1))
+// mu_arr[,1]  <- mu_t
+// C_t         <- C        # Covariance Cholesky
+// C_arr       <- array(dim = c(dim(C_t), T+1))
+// C_arr[,,1]  <- C_t
+// M           <- matrix(1,p,p)
+// n           <- nrow(z) + 1
+
+// xi          <- matrix(rnorm(T*p),T,p) 
 // Egmu    <- rho * Egmu + (1 - rho) * gmu^2           # IV    - Accumulate gradients
 // delmu   <- sqrt(Edelmu + elip * rep(1,p)) / 
 //     sqrt(Egmu + elip * rep(1,p)) * gmu              # V     - Compute update

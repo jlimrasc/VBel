@@ -20,7 +20,7 @@
 #' @examples
 #' # example code
 #' 
-compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, rho, elip, lam0, a, T, T2) {
+compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2) {
     # Initialise values
     if (missing(T)) { T <- 10000 }
     if (missing(T2)) { T2 <- 500 }
@@ -44,8 +44,8 @@ compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, rho, elip, lam0, a, 
     for (i in 1:(T)) {
         th      <- mu_t + C_t %*% xi[i,]                    # II    - Set theta
         gmu     <- compute_nabmu_ELBO(delth_logpi, delthh, 
-                                      th, n, h, lam0, 
-                                      a, z, T2)             # III   - Compute g_{mu}^{t+1}
+                                      th, h, lam0, z, 
+                                      n, a, T2)             # III   - Compute g_{mu}^{t+1}
         Egmu    <- rho * Egmu + (1 - rho) * gmu^2           # IV    - Accumulate gradients
         delmu   <- sqrt(Edelmu + elip * rep(1,p)) / 
             sqrt(Egmu + elip * rep(1,p)) * gmu              # V     - Compute update
@@ -66,16 +66,16 @@ compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, rho, elip, lam0, a, 
     return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
 }
 
-compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, n, h, lam0, a, z, T2) { 
-    res <- compute_AEL_R(theta, h, lam0, a, z, T2, 1) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
+    res <- compute_AEL_R(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     lambda <- res$"lambda"
     h_arr <- res$"h_arr"
     hznth <- h_arr[,,n]
 
     # Calculate gradient LogAEL with respect to theta
-    nabth_logAEL <- 0 # Matrix
+    nabth_logAEL <- 0 # Vector
     for (i in 1:(n-1)) {
-        nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(z[i], theta)) %*% lambda)
+        nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
     }
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }

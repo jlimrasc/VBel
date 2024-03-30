@@ -3,6 +3,7 @@
 export(compute_AEL_R)
 export(compute_AEL_Rcpp)
 export(compute_GVA_R)
+export(compute_GVA_Rcpp)
 import(RcppEigen)
 importFrom(Rcpp,sourceCpp)
 useDynLib(VBel, .registration = TRUE)

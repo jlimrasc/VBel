@@ -5,7 +5,7 @@
 \title{Computes Accurate Empirical Likelihood Interference for a data set using cpp
 with RcppEigen}
 \usage{
-compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz)
+compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz, returnH)
 }
 \arguments{
 \item{th}{Vector or scalar theta}
@@ -21,6 +21,8 @@ compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz)
 \item{T}{Number of iterations using Newton-Raphson for estimation of lambda (default: 500)}
 
 \item{useR_forz}{Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)}
+
+\item{returnH}{Whether to return calculated values of h, H matrix and lambda}
 }
 \value{
 The AEL of the data set
