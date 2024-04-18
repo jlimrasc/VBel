@@ -56,9 +56,8 @@ compute_AEL_Rcpp <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
     if (!returnH) {
         res$log_AEL
     } else if(!useR_forz) {
-        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = res[[3]], "H" = res[[4]]))
+        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = array(unlist(res[[3]]),dim = c(1,ncol(z),nrow(z)+1)), "H" = res[[4]]))
     } else {
-        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = array(H_Zth, dim = c(1, ncol(H_Zth), n)), "H" = H_Zth))
-
+        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = array(t(H_Zth), dim = c(1, ncol(H_Zth), n)), "H" = H_Zth))
     }
 }

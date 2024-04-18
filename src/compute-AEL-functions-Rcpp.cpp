@@ -176,7 +176,11 @@ Rcpp::List compute_AEL_Rcpp_inner_prez(Eigen::VectorXd th, Eigen::MatrixXd H_Zth
         h_list[i] = H_Zth.row(i).transpose();
     }
     
-    return compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+    // return compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+    Rcpp::List res = compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
+    res.push_back(h_list, "h_arr");
+    res.push_back(H_Zth, "H_Zth");
+    return res;
 }
 
 /*** R
