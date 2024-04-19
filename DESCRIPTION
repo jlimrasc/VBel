@@ -1,12 +1,14 @@
 Package: VBel
 Type: Package
-Title: What the package does (short line)
+Title: Variational Bayes for fast and accurate empirical likelihood inference
 Version: 1.0
 Date: 2024-03-07
-Author: Dr. Wei-Chang Yu, Jeremy Lim
-Maintainer: Jeremy Lim <jeremy.lim@unimelb.edu.au>
+Authors@R: c(
+    person("Wei-Chang", "Yu", , "w.yu@maths.usyd.edu.au", role = c("aut", "cre")),
+    person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = "cre")
+  )
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: GPL (>= 3)
 Imports: 
     Rcpp (>= 1.0.12),
     RcppEigen
@@ -14,3 +16,5 @@ LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.3.1
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+URL: https://github.com/jlimrasc/VBel
+BugReports: https://github.com/jlimrasc/VBel/issues
