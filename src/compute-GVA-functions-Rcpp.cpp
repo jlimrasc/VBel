@@ -38,19 +38,28 @@ Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Functi
                                         Eigen::VectorXd theta, Rcpp::Function h, 
                                         Eigen::VectorXd lam0, Eigen::MatrixXd z, 
                                         int n, double a, int p, int T2) {
+    // Rcpp::Rcout << "before";
     Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+    // Rcpp::Rcout << " after";
     Eigen::MatrixXd lambda              = res["lambda"];
     std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
     Eigen::VectorXd hznth               = h_arr[n-1];
-//     
+
     // Calculate gradient LogAEL with respect to theta
+    // Rcpp::Rcout << " calc";
     Eigen::VectorXd nabth_logAEL = Eigen::VectorXd::Zero(p); // Vector
     Eigen::MatrixXd delthh_zith;
     for (int i = 0; i < n-1; i++) {
-        nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array())) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
+        nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array()))(0,0) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
+        //Rcpp::Rcout << "\nlamT" << lambda.rows() << " " << lambda.cols() << " " << lambda << "\nharr" << h_arr[i].rows() << " " << h_arr[i].cols() << " " << h_arr[i] << "\nhznth" << hznth.rows() << " " << hznth.cols() << " " << hznth 
+        // Rcpp::Rcout << "\nTerm1\n" << ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array()))(0,0) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix() << "\nTerm2\n" << nabth_logAEL << "\n";
     }
-    
+
+    // Rcpp::Rcout << "\n" << nabth_logAEL << std::endl;
+    // Rcpp::Rcout << " ELBO";
     Eigen::VectorXd nabmu_ELBO = (nabth_logAEL.array() + Rcpp::as<Eigen::VectorXd>(delth_logpi(theta)).array()).matrix();
+    // Rcpp::Rcout.precision(20);
+    // Rcpp::Rcout << nabmu_ELBO << std::fixed << " Done" << std::endl;
     return nabmu_ELBO;
 }
 // compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
@@ -88,7 +97,7 @@ std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, co
     //         Rcpp::Named("mu_t") = mu_t,
     //         Rcpp::Named("C_t") = C_t);
     // cout << gC_t << endl;
-    std::vector<Eigen::MatrixXd> res = {mu_t, C_t, Egmu, delmu, Edelmu, gC_t, EgC, delC};
+    std::vector<Eigen::MatrixXd> res = {mu_t, C_t, Egmu, delmu, Edelmu, gC_t, EgC, delC, gmu};
     // std::vector<int> v = {(gmu * xi.row(i)).rows(), (gmu * xi.row(i)).cols(), gC_t.rows(), gC_t.cols(), gmu.rows(), gmu.cols(), xi.row(i).rows(), xi.row(i).cols()};
     return res;
 }
@@ -100,6 +109,7 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
         double rho, double elip, double a, int T, int T2, int p, bool rFuncs){
 
     Eigen::VectorXd Egmu    = Eigen::VectorXd::Zero(p);
+    Eigen::VectorXd gmu     = Eigen::VectorXd::Zero(p);
     Eigen::VectorXd Edelmu  = Eigen::VectorXd::Zero(p);
     Eigen::MatrixXd EgC     = Eigen::MatrixXd::Zero(p,p);
     Eigen::MatrixXd EdelC   = Eigen::MatrixXd::Zero(p,p);
@@ -114,10 +124,11 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     Eigen::MatrixXd gC_t, delC;
     
     for (int i = 0; i < T; i++) {
-        Eigen::VectorXd th      = mu_t + C_t * xi.row(i);                    // II    - Set theta
-        Eigen::VectorXd gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
-                                                      lam0, z, n, a, p, T2);
-        
+        Eigen::VectorXd th      = mu_t + C_t * xi.row(i).transpose();                    // II    - Set theta
+        gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
+                                       lam0, z, n, a, p, T2);
+        // Rcpp::List res = Rcpp::List::create(_["gmu"] = gmu);
+        // return(res);
         Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
         delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
         mu_t = mu_t + delmu;                                        // VI    - Update mean
@@ -131,6 +142,8 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
         // Store
         mu_arr.col(i+1) = mu_t;
         C_arr.push_back(C_t);
+        
+        if ((i+1)%500 == 0) { Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;}
     }
     
     // return Rcpp::List::create(
@@ -138,10 +151,11 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     //         Rcpp::Named("C_t") = C_t);
     // cout << gC_t << endl;
     Rcpp::List res = Rcpp::List::create(
-        _["mu_t"]   = mu_t,
-        _["C_t"]    = C_t,
+        _["mu_FC"]   = mu_t,
+        _["C_FC"]    = C_t,
         _["mu_arr"] = mu_arr,
         _["C_arr"]  = C_arr,
+        _["gmu"]    = gmu,
         _["Egmu"]   = Egmu,
         _["delmu"]  = delmu, 
         _["Edelmu"] = Edelmu, 

@@ -37,20 +37,22 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
     if (fullCpp) {
         res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, xi, 
                                            rho, elip, a, T, T2, p, rFuncs)
-        mu_t    <- res$mu_t
-        C_t     <- res$C_t
-        Egmu    <- res$Egmu
-        delmu   <- res$delmu
-        Edelmu  <- res$Edelmu
-        gC_t    <- res$gC_t
-        EgC     <- res$EgC
-        delC    <- res$delC
+        res$mu_FC    <- matrix(res$mu_FC, nrow = p, ncol = 1)
+        # C_t     <- res$C_t
+        res$Egmu    <- matrix(res$Egmu, nrow = p, ncol = 1)
+        res$delmu   <- matrix(res$delmu, nrow = p, ncol = 1)
+        res$Edelmu  <- matrix(res$Edelmu, nrow = p, ncol = 1)
+        res$gmu     <- matrix(res$gmu, nrow = p, ncol = 1)
+        # gC_t    <- res$gC_t
+        # EgC     <- res$EgC
+        # delC    <- res$delC
         
         
         # Store
         mu_arr  <- res$mu_arr
         C_arr   <- array(unlist(res$C_arr), dim = c(dim(C),T+1))
-        
+        res$C_arr <- C_arr
+
     } else {
         Egmu        <- numeric(p)
         Edelmu      <- numeric(p)
@@ -79,13 +81,28 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
             gC_t    <- res[[6]]
             EgC     <- res[[7]]
             delC    <- res[[8]]
+            gmu     <- res[[9]]
             # Store
             mu_arr[,i+1]   <- mu_t
             C_arr[,,i+1]    <- C_t
-            
+            if (i %% 500 == 0) { cat("Iteration:", i, "\n") }
         }
+        res <- list(
+            "mu_FC" = mu_t,
+            "C_FC" = C_t,
+            "mu_arr" = mu_arr,
+            "C_arr"  = C_arr,
+            "gmu"    = gmu,
+            "Egmu"   = Egmu,
+            "delmu"  = delmu,
+            "Edelmu" = Edelmu,
+            "gC_t"   = gC_t, 
+            "EgC"    = EgC, 
+            "delC"   = delC
+        )
     }
-    return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
+    # return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
+    return(res)
 }
         # Egmu    <- rho * Egmu + (1 - rho) * gmu^2           # IV    - Accumulate gradients
         # delmu   <- sqrt(Edelmu + elip * rep(1,p)) /
@@ -132,7 +149,7 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
         #     browser()
         # }
 
-compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, n, h, lam0, a, z, T2) {
+compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) {
     res <- compute_AEL_Rcpp(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     lambda <- res$"lambda"
     h_arr <- res$"h_arr"
@@ -143,6 +160,7 @@ compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, n, h, lam0,
     for (i in 1:(n-1)) {
         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
     }
+    # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }
 # 

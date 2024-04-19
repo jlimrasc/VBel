@@ -13,9 +13,12 @@ th   <- matrix(c(0.8277, -1.0050), nrow = 2)
 a <- 0.00001
 z    <- cbind(x, y)
 h    <- function(z, th) {
+    # print(z)
+    # print(th)
     xi <- z[1]
     yi <- z[2]
     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+    # print(h_zith)
     matrix(h_zith, nrow = 2)
 }
 
@@ -32,20 +35,33 @@ C_0 <- unname(t(chol(vcov(reslm))))
 # warning("Treating delth_logpi as column vector")
 delth_logpi <- function(theta) {-0.0001 * mu}
 elip <- 10^-5
-T <- 1
+T <- 10000
 T2 <- 500
 rho <- 0.9
 
-# set.seed(1)
-# tic("R")
-# ansGVA <-compute_GVA_R(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
-# toc()
-# set.seed(1)
-tic("Rcpp")
-ansGVARcpp <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+options(digits = 20)
+set.seed(1)
+tic("R")
+ansGVA <-compute_GVA_R(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
 toc()
-any(ansGVA$mu_FC_arr != ansGVARcpp$mu_FC_arr)
-any(ansGVA$C_FC_arr != ansGVARcpp$C_FC_arr)
+set.seed(1)
+tic("RcppHalf")
+ansGVARcppHalf <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
+toc()
+set.seed(1)
+tic("RcppPure")
+ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+toc()
+any(round(ansGVA$mu_arr,5) != round(ansGVARcppPure$mu_arr,5))
+any(round(ansGVA$C_arr,5) != round(ansGVARcppPure$C_arr,5))
+any(round(ansGVA$mu_arr,5) != round(ansGVARcppHalf$mu_arr,5))
+any(round(ansGVA$C_arr,5) != round(ansGVARcppHalf$C_arr,5))
+ansGVA$mu_FC
+ansGVARcppHalf$mu_FC
+ansGVARcppPure$mu_FC
+ansGVA$C_FC
+ansGVARcppHalf$C_FC
+ansGVARcppPure$C_FC
 # ans$mu_FC
 # ans$C_FC
 

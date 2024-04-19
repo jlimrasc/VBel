@@ -143,6 +143,7 @@ Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     
     for (int i = 0; i < n - 1; i++) {
         h_zith = Rcpp::as<VectorXd>(h(z.row(i).transpose(), th)); // Costly to call R functions
+        // Rcpp::Rcout << h_zith << "\nz" << z.row(i).transpose() << "\nth" << th << "\nh" << h(z.row(i).transpose(), th) << "\n";
         
         h_list[i] = h_zith;
         

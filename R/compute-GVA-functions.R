@@ -61,9 +61,25 @@ compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, 
         # Store
         mu_arr[,i+1]   <- mu_t
         C_arr[,,i+1]    <- C_t
+        
+        if (i %% 500 == 0) { cat("Iteration:", i, "\n") }
     }
 
-    return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
+    # return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
+    return(list(
+        "mu_FC"  = mu_t,
+        "C_FC"   = C_t,
+        "mu_arr" = mu_arr,
+        "C_arr"  = C_arr,
+        "gmu"    = gmu,
+        "Egmu"   = Egmu,
+        "delmu"  = delmu, 
+        "Edelmu" = Edelmu, 
+        "gC_t"   = gC_t, 
+        "EgC"    = EgC, 
+        "delC"   = delC
+        
+    ))
 }
 
 compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
@@ -76,7 +92,23 @@ compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2)
     nabth_logAEL <- 0 # Vector
     for (i in 1:(n-1)) {
         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
+        # print("lamT")
+        # print(dim(lambda))
+        # print(lambda)
+        # print("harr")
+        # print(dim(h_arr[,,i]))
+        # print(h_arr[,,i])
+        # print("hzn")
+        # print(dim(hznth))
+        # print(hznth)
+        # print("Term1")
+        # print((1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda))
+        # print("Term2")
+        # print(nabth_logAEL)
+        # print("")
     }
+    # print(nabth_logAEL)
+    # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }
 
