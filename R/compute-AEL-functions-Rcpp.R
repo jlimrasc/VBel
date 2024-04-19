@@ -1,9 +1,8 @@
-#' Computes Accurate Empirical Likelihood Interference for a data set using cpp
+#' Computes Adjusted Empirical Likelihood Interference for a data set using R and C++
 #' with RcppEigen
 #' 
 #' @description 
-#' `compute_AEL_Rcpp` returns the result of running AEL with the values present in 
-#' the arguments.
+#' `compute_AEL_Rcpp` returns the result of running AEL with the values present in the arguments.
 #' 
 #' @param th        Vector or scalar theta
 #' @param h         User-defined function, outputs array
@@ -19,6 +18,8 @@
 #' @importFrom Rcpp sourceCpp
 #' @export
 #'
+#' @seealso [compute_AEL_R()] for purely R computation
+#' 
 #' @examples compute_AEL_Rcpp(matrix(c(0.8277, -1.0050), nrow = 2), function(z, th) {matrix(c(z[2] - th[1] - th[2] * z[1], z[1]*(z[2] - th[1] - th[2] * z[1])), nrow = 2)}, matrix(c(0,0), nrow = 2), 0.001, cbind(runif(30, min = -5, max = 5), 0.75 - runif(30, min = -5, max = 5) + rnorm(30, mean = 0, sd = 1)))
 
 compute_AEL_Rcpp <- function(th, h, lam0, a, z, T, useR_forz, returnH) {

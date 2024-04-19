@@ -1,12 +1,15 @@
 # VBel
 
-Variational Bayes for fast and accurate empirical likelihood (AEL) inference
+Variational Bayes for fast and accurate empirical likelihood inference
 
 # About this package
 
 description
 
-This package allows you to run AEL on a data set in R, and can use C++ for faster computation 
+This package allows also you to run GVA on a data set in R, and can use C++ for faster computation 
+(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation).
+
+This package allows also you to run AEL on a data set in R, and can use C++ for faster computation 
 (1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation).
 
 * * *
@@ -61,27 +64,44 @@ devtools::install_github("jlimrasc/VBel")
 
 # Toy example
 ```{r}
-library(VaDA)
-set.seed(1)
+library(VBel)
 
 # Set up variables
-x    <- runif(30, min = -5, max = 5) # Random Uniform Distribution
-elip <- rnorm(30, mean = 0, sd = 1)  # Random Normal Distribution
+set.seed(1)
+x    <- runif(30, min = -5, max = 5)
+elip <- rnorm(30, mean = 0, sd = 1)
 y    <- 0.75 - x + elip
 lam0 <- matrix(c(0,0), nrow = 2)
 th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-a <- 0.001
+a    <- 0.00001
 z    <- cbind(x, y)
 h    <- function(z, th) {
     xi <- z[1]
     yi <- z[2]
-    h_zith <- c(yi - th[1] - th[2] * xi)
-    h_zith[2] <- xi * h_zith[1]
+    h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
     matrix(h_zith, nrow = 2)
 }
 
+delthh    <- function(z, th) {
+    xi <- z[1]
+    matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
+}
+
+n <- 31
+reslm <- lm(y ~ x)
+mu <- matrix(unname(reslm$coefficients),2,1)
+C_0 <- unname(t(chol(vcov(reslm))))
+
+delth_logpi <- function(theta) {-0.0001 * mu}
+elip <- 10^-5
+T <- 10
+T2 <- 500
+rho <- 0.9
+
 # Excecute function
-compute_AEL_R(th, h, lam0, a, z)
+ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T2)
+set.seed(1)
+ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
 ```
 
 * * *

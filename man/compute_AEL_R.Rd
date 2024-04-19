@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-AEL-functions.R
 \name{compute_AEL_R}
 \alias{compute_AEL_R}
-\title{Computes Accurate Empirical Likelihood Interference for a data set using R}
+\title{Computes Adjusted Empirical Likelihood Interference for a data set using R}
 \usage{
 compute_AEL_R(th, h, lam0, a, z, T, returnH)
 }
@@ -45,4 +45,7 @@ h    <- function(z, th) {
     matrix(h_zith, nrow = 2)
 }
 ans <- compute_AEL_R(th, h, lam0, a, z)
+}
+\seealso{
+\code{\link[=compute_AEL_Rcpp]{compute_AEL_Rcpp()}} for mix of R and C++ computation
 }

@@ -1,4 +1,4 @@
-#' Computes Accurate Empirical Likelihood Interference for a data set using R
+#' Computes Adjusted Empirical Likelihood Interference for a data set using R
 #'
 #' @description
 #' `compute_AEL` returns the result of running AEL with the values present in
@@ -14,6 +14,8 @@
 #'
 #' @return The AEL of the data set
 #' @export
+#' 
+#' @seealso [compute_AEL_Rcpp()] for mix of R and C++ computation
 #'
 #' @examples
 #' set.seed(1)

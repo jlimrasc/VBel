@@ -12,18 +12,65 @@
 #' @param a             Scalar AEL constant, must be >0, small values recommended
 #' @param T             Number of iterations for GVA (default:10,000)
 #' @param T2            Number of iterations for Log AEL (default:500)
-
+#' @param verbosity     Integer for how often to print updates on current iteration number (default:500)
+#' @param returnAll     Bool whether to return result for every line of the last iteration (default:FALSE)
 #'
-#' @returns             List of mu_FC and C_FC. Access using those names.
+#' @returns A list containing:  \enumerate{
+#'              \item A vector mu_FC
+#'              \item A matrix C_FC 
+#'              \item An array mu_FC_arr 
+#'              \item An array C_FC_arr. 
+#'              } Access using those names. If returnAll is TRUE, also inludes gmu, Egmu, delmu, Edelmu, gC_t, EgC, delC
+#'
 #' @export
 #'
-#' @examples
-#' # example code
+#' @seealso [compute_GVA_Rcpp()] for mix of R and C++ computation
 #' 
-compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2) {
+#' @examples
+#' set.seed(1)
+#' x    <- runif(30, min = -5, max = 5)
+#' elip <- rnorm(30, mean = 0, sd = 1)
+#' y    <- 0.75 - x + elip
+#' lam0 <- matrix(c(0,0), nrow = 2)
+#' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' a    <- 0.00001
+#' z    <- cbind(x, y)
+#' h    <- function(z, th) {
+#'     xi <- z[1]
+#'     yi <- z[2]
+#'     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+#'     matrix(h_zith, nrow = 2)
+#' }
+#' 
+#' delthh    <- function(z, th) {
+#'     xi <- z[1]
+#'     matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
+#' }
+#' 
+#' n <- 31
+#' reslm <- lm(y ~ x)
+#' mu <- matrix(unname(reslm$coefficients),2,1)
+#' C_0 <- unname(t(chol(vcov(reslm))))
+#' 
+#' delth_logpi <- function(theta) {-0.0001 * mu}
+#' elip <- 10^-5
+#' T <- 10
+#' T2 <- 500
+#' rho <- 0.9
+#' 
+#' # -----------------------------
+#' # Main
+#' # -----------------------------
+#' options(digits = 20)
+#' set.seed(1)
+#' ansGVA <-compute_GVA_R(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+#' 
+compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, verbosity, returnAll) {
     # Initialise values
     if (missing(T)) { T <- 10000 }
     if (missing(T2)) { T2 <- 500 }
+    if (missing(verbosity)) { verbosity <- 500 }
+    if (missing(returnAll)) { returnAll <- FALSE }
     
     p           <- nrow(C)
     Egmu        <- numeric(p)
@@ -39,7 +86,7 @@ compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, 
     M           <- matrix(1,p,p)
     n           <- nrow(z) + 1
 
-    xi          <- matrix(rnorm(T*p),T,p)                   # I     - Draw xi
+    xi          <- matrix(stats::rnorm(T*p),T,p)                   # I     - Draw xi
     
     for (i in 1:(T)) {
         th      <- mu_t + C_t %*% xi[i,]                    # II    - Set theta
@@ -62,24 +109,31 @@ compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, 
         mu_arr[,i+1]   <- mu_t
         C_arr[,,i+1]    <- C_t
         
-        if (i %% 500 == 0) { cat("Iteration:", i, "\n") }
+        if (verbosity && i %% verbosity == 0) { cat("Iteration:", i, "\n") }
     }
 
-    # return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
-    return(list(
-        "mu_FC"  = mu_t,
-        "C_FC"   = C_t,
-        "mu_arr" = mu_arr,
-        "C_arr"  = C_arr,
-        "gmu"    = gmu,
-        "Egmu"   = Egmu,
-        "delmu"  = delmu, 
-        "Edelmu" = Edelmu, 
-        "gC_t"   = gC_t, 
-        "EgC"    = EgC, 
-        "delC"   = delC
-        
-    ))
+    if (!returnAll) {
+        return(list(
+            "mu_FC"  = mu_t,
+            "C_FC"   = C_t,
+            "mu_arr" = mu_arr,
+            "C_arr"  = C_arr
+        ))
+    } else {
+        return(list(
+            "mu_FC"  = mu_t,
+            "C_FC"   = C_t,
+            "mu_arr" = mu_arr,
+            "C_arr"  = C_arr,
+            "gmu"    = gmu,
+            "Egmu"   = Egmu,
+            "delmu"  = delmu, 
+            "Edelmu" = Edelmu, 
+            "gC_t"   = gC_t, 
+            "EgC"    = EgC, 
+            "delC"   = delC
+        ))
+    }
 }
 
 compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
@@ -92,23 +146,7 @@ compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2)
     nabth_logAEL <- 0 # Vector
     for (i in 1:(n-1)) {
         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
-        # print("lamT")
-        # print(dim(lambda))
-        # print(lambda)
-        # print("harr")
-        # print(dim(h_arr[,,i]))
-        # print(h_arr[,,i])
-        # print("hzn")
-        # print(dim(hznth))
-        # print(hznth)
-        # print("Term1")
-        # print((1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda))
-        # print("Term2")
-        # print(nabth_logAEL)
-        # print("")
     }
-    # print(nabth_logAEL)
-    # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }
 

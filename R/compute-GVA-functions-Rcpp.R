@@ -1,4 +1,4 @@
-#' Computes Full-Covariance Gaussian VB posterior in R
+#' Computes Full-Covariance Gaussian VB posterior in R and C++
 #'
 #' @param mu            Column vector, initial value of Gaussian VB mean
 #' @param C             Lower Triangular Matrix, initial value of Gaussian VB Cholesky
@@ -12,31 +12,76 @@
 #' @param a             Scalar AEL constant, must be >0, small values recommended
 #' @param T             Number of iterations for GVA (default:10,000)
 #' @param T2            Number of iterations for Log AEL (default:500)
-#' @param fullCpp       Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: FALSE)
-#' @param rFuncs        Bool whether user-defined functions are written in R (TRUE) or in cpp (FALSE, write them in user_def_funcs.c and pass empty functions into h, delthh and delth_logppi) (default: TRUE) Note: only used when fullCpp is TRUE
+#' @param fullCpp       Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)
+#' @param verbosity     Integer for how often to print updates on current iteration number (default:500)
+#' @param returnAll     Bool whether to return result for every line of the last iteration (default:FALSE)
 #'
-#' @returns             A list containing:  1. A vector mu_FC 
-#'                                 2. A matrix C_FC, 
-#'                                 3. An array mu_FC_arr and 
-#'                                 4. An array C_FC_arr. Access using those names.
+#' @returns A list containing:  \enumerate{
+#'              \item A vector mu_FC
+#'              \item A matrix C_FC 
+#'              \item An array mu_FC_arr 
+#'              \item An array C_FC_arr. 
+#'              } Access using those names. If returnAll is TRUE, also inludes gmu, Egmu, delmu, Edelmu, gC_t, EgC, delC
+#' 
 #' @export
 #'
-#' @examples
-#' # example code
+#' @seealso [compute_GVA_R()] for purely R computation
 #' 
-compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp, rFuncs) {
+#' @examples
+#' set.seed(1)
+#' x    <- runif(30, min = -5, max = 5)
+#' elip <- rnorm(30, mean = 0, sd = 1)
+#' y    <- 0.75 - x + elip
+#' lam0 <- matrix(c(0,0), nrow = 2)
+#' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' a <- 0.00001
+#' z    <- cbind(x, y)
+#' h    <- function(z, th) {
+#'     xi <- z[1]
+#'     yi <- z[2]
+#'     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+#'     matrix(h_zith, nrow = 2)
+#' }
+#' 
+#' delthh    <- function(z, th) {
+#'     xi <- z[1]
+#'     matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
+#' }
+#' 
+#' n <- 31
+#' reslm <- lm(y ~ x)
+#' mu <- matrix(unname(reslm$coefficients),2,1)
+#' C_0 <- unname(t(chol(vcov(reslm))))
+#' 
+#' delth_logpi <- function(theta) {-0.0001 * mu}
+#' elip <- 10^-5
+#' T <- 10
+#' T2 <- 500
+#' rho <- 0.9
+#' 
+#' # -----------------------------
+#' # Main
+#' # -----------------------------
+#' options(digits = 20)
+#' set.seed(1)
+#' ansGVARcppHalf <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
+#' set.seed(1)
+#' ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+#' 
+compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp, verbosity, returnAll) {
     # Initialise values
     if (missing(T)) { T <- 10000 }
     if (missing(T2)) { T2 <- 500 }
     if (missing(fullCpp)) { fullCpp <- TRUE }
-    if (missing(rFuncs)) { rFuncs <- TRUE }
+    if (missing(verbosity)) { verbosity <- 500 }
+    if (missing(returnAll)) { returnAll <- FALSE }
     
     p           <- nrow(C)
-    xi          <- matrix(rnorm(T*p),T,p)                   # I     - Draw xi
+    xi          <- matrix(stats::rnorm(T*p),T,p)                # I     - Draw xi
     
     if (fullCpp) {
         res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, xi, 
-                                           rho, elip, a, T, T2, p, rFuncs)
+                                           rho, elip, a, T, T2, p, verbosity)
         res$mu_FC    <- matrix(res$mu_FC, nrow = p, ncol = 1)
         # C_t     <- res$C_t
         res$Egmu    <- matrix(res$Egmu, nrow = p, ncol = 1)
@@ -85,11 +130,11 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
             # Store
             mu_arr[,i+1]   <- mu_t
             C_arr[,,i+1]    <- C_t
-            if (i %% 500 == 0) { cat("Iteration:", i, "\n") }
+            if (verbosity && i %% verbosity == 0) { cat("Iteration:", i, "\n") }
         }
         res <- list(
-            "mu_FC" = mu_t,
-            "C_FC" = C_t,
+            "mu_FC"  = mu_t,
+            "C_FC"   = C_t,
             "mu_arr" = mu_arr,
             "C_arr"  = C_arr,
             "gmu"    = gmu,
@@ -101,53 +146,19 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
             "delC"   = delC
         )
     }
-    # return(list("mu_FC" = mu_t, "C_FC" = C_t, "mu_FC_arr" = mu_arr, "C_FC_arr" = C_arr))
-    return(res)
+    
+    if (!returnAll) {
+        res2 <- list(
+            "mu_FC"  = res$mu_FC,
+            "C_FC"   = res$C_FC,
+            "mu_arr" = res$mu_arr,
+            "C_arr"  = res$C_arr
+        )
+        return(res2)
+    } else {
+        return(res)
+    }
 }
-        # Egmu    <- rho * Egmu + (1 - rho) * gmu^2           # IV    - Accumulate gradients
-        # delmu   <- sqrt(Edelmu + elip * rep(1,p)) /
-        #     sqrt(Egmu + elip * rep(1,p)) * gmu              # V     - Compute update
-        # mu_t    <- mu_t + delmu                             # VI    - Update mean
-        # Edelmu  <- rho * Edelmu + (1 - rho) * delmu^2       # VII   - Accumulate updates
-        # gC_t    <- compute_nabC_ELBO2(gmu, xi[i,], C_t)      # VIII  - Compute g_C^{t+1}
-        # gC_t[upper.tri(gC_t)] <- 0                          #       - Set gC_t to lower triag matx
-        # EgC     <- rho * EgC + (1 - rho) * gC_t^2           # IX    - Accumulate gradients
-        # delC    <- sqrt(EdelC + elip * M) /
-        #     sqrt(EgC + elip * M) * gC_t                     # X     - Compute update
-        # C_t     <- C_t + delC                               # XI    - Update covariance Cholesky
-        # EgC     <- rho * EgC + (1 - rho) * delC^2           # XII   - Accumulate updates
-        # if (any(res[[1]] != mu_t)) {
-        #     warning(sprintf("mu_t deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[2]] != C_t)) {
-        #     warning(sprintf("C_t deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[3]] != Egmu)) {
-        #     warning(sprintf("Egmu deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[4]] != delmu)) {
-        #     warning(sprintf("delmu deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[5]] != Edelmu)) {
-        #     warning(sprintf("Edelmu deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[6]] != gC_t)) {
-        #     warning(sprintf("gC_t deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[7]] != EgC)) {
-        #     warning(sprintf("EgC deviated at line %i",i))
-        #     browser()
-        # }
-        # if (any(res[[8]] != delC)) {
-        #     warning(sprintf("delC deviated at line %i",i))
-        #     browser()
-        # }
 
 compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) {
     res <- compute_AEL_Rcpp(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
@@ -163,8 +174,3 @@ compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z,
     # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }
-# 
-# 
-# compute_nabC_ELBO2 <- function(gmu, xi, C_t) {
-#     nabC_ELBO <- gmu %*% t(xi) + diag(1/diag(C_t))
-# }

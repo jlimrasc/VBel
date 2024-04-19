@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-GVA-functions-Rcpp.R
 \name{compute_GVA_Rcpp}
 \alias{compute_GVA_Rcpp}
-\title{Computes Full-Covariance Gaussian VB posterior in R}
+\title{Computes Full-Covariance Gaussian VB posterior in R and C++}
 \usage{
 compute_GVA_Rcpp(
   mu,
@@ -18,7 +18,8 @@ compute_GVA_Rcpp(
   T,
   T2,
   fullCpp,
-  rFuncs
+  verbosity,
+  returnAll
 )
 }
 \arguments{
@@ -46,21 +47,65 @@ compute_GVA_Rcpp(
 
 \item{T2}{Number of iterations for Log AEL (default:500)}
 
-\item{fullCpp}{Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: FALSE)}
+\item{fullCpp}{Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)}
 
-\item{rFuncs}{Bool whether user-defined functions are written in R (TRUE) or in cpp (FALSE, write them in user_def_funcs.c and pass empty functions into h, delthh and delth_logppi) (default: TRUE) Note: only used when fullCpp is TRUE}
+\item{verbosity}{Integer for how often to print updates on current iteration number (default:500)}
+
+\item{returnAll}{Bool whether to return result for every line of the last iteration (default:FALSE)}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{        A list containing:  1. A vector mu_FC 
-                            2. A matrix C_FC, 
-                            3. An array mu_FC_arr and 
-                            4. An array C_FC_arr. Access using those names.
-}\if{html}{\out{</div>}}
+A list containing:  \enumerate{
+\item A vector mu_FC
+\item A matrix C_FC
+\item An array mu_FC_arr
+\item An array C_FC_arr.
+} Access using those names. If returnAll is TRUE, also inludes gmu, Egmu, delmu, Edelmu, gC_t, EgC, delC
 }
 \description{
-Computes Full-Covariance Gaussian VB posterior in R
+Computes Full-Covariance Gaussian VB posterior in R and C++
 }
 \examples{
-# example code
+set.seed(1)
+x    <- runif(30, min = -5, max = 5)
+elip <- rnorm(30, mean = 0, sd = 1)
+y    <- 0.75 - x + elip
+lam0 <- matrix(c(0,0), nrow = 2)
+th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+a <- 0.00001
+z    <- cbind(x, y)
+h    <- function(z, th) {
+    xi <- z[1]
+    yi <- z[2]
+    h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+    matrix(h_zith, nrow = 2)
+}
 
+delthh    <- function(z, th) {
+    xi <- z[1]
+    matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
+}
+
+n <- 31
+reslm <- lm(y ~ x)
+mu <- matrix(unname(reslm$coefficients),2,1)
+C_0 <- unname(t(chol(vcov(reslm))))
+
+delth_logpi <- function(theta) {-0.0001 * mu}
+elip <- 10^-5
+T <- 10
+T2 <- 500
+rho <- 0.9
+
+# -----------------------------
+# Main
+# -----------------------------
+options(digits = 20)
+set.seed(1)
+ansGVARcppHalf <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
+set.seed(1)
+ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+
+}
+\seealso{
+\code{\link[=compute_GVA_R]{compute_GVA_R()}} for purely R computation
 }

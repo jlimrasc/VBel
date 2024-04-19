@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-AEL-functions-Rcpp.R
 \name{compute_AEL_Rcpp}
 \alias{compute_AEL_Rcpp}
-\title{Computes Accurate Empirical Likelihood Interference for a data set using cpp
+\title{Computes Adjusted Empirical Likelihood Interference for a data set using R and C++
 with RcppEigen}
 \usage{
 compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz, returnH)
@@ -28,9 +28,11 @@ compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz, returnH)
 The AEL of the data set
 }
 \description{
-\code{compute_AEL_Rcpp} returns the result of running AEL with the values present in
-the arguments.
+\code{compute_AEL_Rcpp} returns the result of running AEL with the values present in the arguments.
 }
 \examples{
 compute_AEL_Rcpp(matrix(c(0.8277, -1.0050), nrow = 2), function(z, th) {matrix(c(z[2] - th[1] - th[2] * z[1], z[1]*(z[2] - th[1] - th[2] * z[1])), nrow = 2)}, matrix(c(0,0), nrow = 2), 0.001, cbind(runif(30, min = -5, max = 5), 0.75 - runif(30, min = -5, max = 5) + rnorm(30, mean = 0, sd = 1)))
+}
+\seealso{
+\code{\link[=compute_AEL_R]{compute_AEL_R()}} for purely R computation
 }

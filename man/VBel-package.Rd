@@ -13,8 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{VBel}
 \packageIndices{VBel}
-~~ An overview of how to use the package, including the most important ~~
-~~ functions ~~
+Define required data i.e.
 }
 \author{
 \packageAuthor{VBel}
@@ -22,15 +21,18 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{VBel}
 }
 \references{
-~~ Literature or other references for background information ~~
+\url{https://www.tandfonline.com/doi/abs/10.1080/01621459.2023.2169701}
 }
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in ~~
-~~ the R documentation directory ~~
 \keyword{ package }
 \seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
+\code{\link[=compute_AEL_R]{compute_AEL_R()}} for R computation of AEL
+
+\code{\link[=compute_AEL_Rcpp]{compute_AEL_Rcpp()}} for mix of R and C++ computation of AEL
+
+\code{\link[=compute_GVA_R]{compute_GVA_R()}} for R computation of GVA
+
+\code{\link[=compute_GVA_Rcpp]{compute_GVA_Rcpp()}} for mix of R and C++ computation of GVA
 }
 \examples{
-~~ simple examples of the most important functions ~~
+ansGVARcppPure <- compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
 }

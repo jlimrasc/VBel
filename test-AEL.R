@@ -1,7 +1,8 @@
 # source("compute-AEL-functions.R")
+# REQUIRES TIC-TOC PACKAGE TO MEASURE TIMES, COMMENT OUT NECESSARY LINES IF NOT USING THEM
 
 # -----------------------------
-# Main
+# Initialise Variables
 # -----------------------------
 set.seed(1)
 x    <- runif(30, min = -5, max = 5)
@@ -19,26 +20,20 @@ h    <- function(z, th) {
     matrix(h_zith, nrow = 2)
 }
 
-ansAEL          <- compute_AEL_Rcpp(th, h, lam0, a, z, returnH = TRUE)
-ansAELRcppprez  <- compute_AEL_Rcpp(th, h, lam0, a, z, returnH = TRUE)
-ansAELRcpp      <- compute_AEL_Rcpp(th, h, lam0, a, z, useR_forz = TRUE, returnH = TRUE)
-
-any(ansAEL$log_AEL==ansAELRcppprez$log_AEL)
-any(ansAEL$lambda==ansAELRcppprez$lambda)
-any(ansAEL$h_arr==ansAELRcppprez$h_arr)
-any(ansAEL$H==ansAELRcppprez$H)
-any(ansAELRcpp$log_AEL==ansAELRcppprez$log_AEL)
-any(ansAELRcpp$lambda==ansAELRcppprez$lambda)
-any(ansAELRcpp$h_arr==ansAELRcppprez$h_arr)
-any(ansAELRcpp$H==ansAELRcppprez$H)
-
-
+# -----------------------------
+# Main
+# -----------------------------
 # tic("R")
-# compute_AEL_R(th, h, lam0, a, z)
+ansAEL          <- compute_AEL_Rcpp(th, h, lam0, a, z)
 # toc()
 # tic("Rcpp")
-# compute_AEL_Rcpp(th, h, lam0, a, z)
+ansAELRcppprez  <- compute_AEL_Rcpp(th, h, lam0, a, z, useR_forz = FALSE)
 # toc()
 # tic("Rcpp_prez")
-# compute_AEL_Rcpp(th, h, lam0, a, z, TRUE)
+ansAELRcpp      <- compute_AEL_Rcpp(th, h, lam0, a, z, useR_forz = TRUE)
 # toc()
+
+# Testing for discrepencies, FALSE if the same (might be floating point errors even with rounding)
+round(ansAEL,5) == round(ansAELRcpp,5)
+round(ansAEL,5) == round(ansAELRcppprez,5)
+
