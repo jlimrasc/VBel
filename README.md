@@ -6,11 +6,11 @@ Variational Bayes for fast and accurate empirical likelihood inference
 
 description
 
-This package allows also you to run GVA on a data set in R, and can use C++ for faster computation 
-(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation).
+This package allows you to run GVA on a data set in R, and C++ can be used for faster computation 
+(22.5 mins (1350.71s) for R, 40.23s for partial Rcpp and 28.5s for pure Rcpp computation for 10,000 iterations of GVA).
 
-This package allows also you to run AEL on a data set in R, and can use C++ for faster computation 
-(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation).
+This package also allows you to run AEL on a data set in R, and C++ can be used for faster computation 
+(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation for 500 iterations of AEL).
 
 * * *
 
