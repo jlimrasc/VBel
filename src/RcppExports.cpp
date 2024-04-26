@@ -108,46 +108,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcppeigen_hello_world
-Eigen::MatrixXd rcppeigen_hello_world();
-RcppExport SEXP _VBel_rcppeigen_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcppeigen_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcppeigen_outerproduct
-Eigen::MatrixXd rcppeigen_outerproduct(const Eigen::VectorXd& x);
-RcppExport SEXP _VBel_rcppeigen_outerproduct(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcppeigen_outerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcppeigen_innerproduct
-double rcppeigen_innerproduct(const Eigen::VectorXd& x);
-RcppExport SEXP _VBel_rcppeigen_innerproduct(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcppeigen_innerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcppeigen_bothproducts
-Rcpp::List rcppeigen_bothproducts(const Eigen::VectorXd& x);
-RcppExport SEXP _VBel_rcppeigen_bothproducts(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcppeigen_bothproducts(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -158,10 +118,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_VBel_compute_AEL_Rcpp_inner_prez", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner_prez, 6},
     {"_VBel_compute_GVA_Rcpp_inner_IVtoXII", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_IVtoXII, 13},
     {"_VBel_compute_GVA_Rcpp_inner_full", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_full, 15},
-    {"_VBel_rcppeigen_hello_world", (DL_FUNC) &_VBel_rcppeigen_hello_world, 0},
-    {"_VBel_rcppeigen_outerproduct", (DL_FUNC) &_VBel_rcppeigen_outerproduct, 1},
-    {"_VBel_rcppeigen_innerproduct", (DL_FUNC) &_VBel_rcppeigen_innerproduct, 1},
-    {"_VBel_rcppeigen_bothproducts", (DL_FUNC) &_VBel_rcppeigen_bothproducts, 1},
     {NULL, NULL, 0}
 };
 
