@@ -84,8 +84,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_GVA_Rcpp_inner_full
-Rcpp::List compute_GVA_Rcpp_inner_full(Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh, Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, Eigen::MatrixXd xi, double rho, double elip, double a, int T, int T2, int p, int verbosity);
-RcppExport SEXP _VBel_compute_GVA_Rcpp_inner_full(SEXP muSEXP, SEXP CSEXP, SEXP hSEXP, SEXP delthhSEXP, SEXP delth_logpiSEXP, SEXP zSEXP, SEXP lam0SEXP, SEXP xiSEXP, SEXP rhoSEXP, SEXP elipSEXP, SEXP aSEXP, SEXP TSEXP, SEXP T2SEXP, SEXP pSEXP, SEXP verbositySEXP) {
+Rcpp::List compute_GVA_Rcpp_inner_full(Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh, Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, double rho, double elip, double a, int T, int T2, int p, int verbosity);
+RcppExport SEXP _VBel_compute_GVA_Rcpp_inner_full(SEXP muSEXP, SEXP CSEXP, SEXP hSEXP, SEXP delthhSEXP, SEXP delth_logpiSEXP, SEXP zSEXP, SEXP lam0SEXP, SEXP rhoSEXP, SEXP elipSEXP, SEXP aSEXP, SEXP TSEXP, SEXP T2SEXP, SEXP pSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -96,7 +96,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::Function >::type delth_logpi(delth_logpiSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type z(zSEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXd >::type lam0(lam0SEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type xi(xiSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< double >::type elip(elipSEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
@@ -104,10 +103,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type T2(T2SEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
     Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, xi, rho, elip, a, T, T2, p, verbosity));
-    return rcpp_result_gen;
-END_RCPP
-}
+    rcpp_result_gen = Rcpp::wrap(compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, p, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,7 +113,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_VBel_compute_AEL_Rcpp_inner", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner, 6},
     {"_VBel_compute_AEL_Rcpp_inner_prez", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner_prez, 6},
     {"_VBel_compute_GVA_Rcpp_inner_IVtoXII", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_IVtoXII, 13},
-    {"_VBel_compute_GVA_Rcpp_inner_full", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_full, 15},
+    {"_VBel_compute_GVA_Rcpp_inner_full", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_full, 14},
     {NULL, NULL, 0}
 };
 

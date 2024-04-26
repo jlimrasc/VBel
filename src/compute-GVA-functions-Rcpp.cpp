@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
+#include <random>
 #include "compute-AEL-functions-Rcpp.h"
 using namespace Rcpp;
 using namespace RcppEigen;
@@ -69,7 +70,7 @@ std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, co
 // [[Rcpp::export]]
 Rcpp::List compute_GVA_Rcpp_inner_full(
         Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh,
-        Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, Eigen::MatrixXd xi, 
+        Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, 
         double rho, double elip, double a, int T, int T2, int p, int verbosity){
 
     Eigen::VectorXd Egmu    = Eigen::VectorXd::Zero(p);
@@ -87,6 +88,14 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     Eigen::VectorXd delmu;
     Eigen::MatrixXd gC_t, delC;
     
+    // Set up for normal distribution
+    // From: https://eigen.tuxfamily.org/dox/classEigen_1_1DenseBase.html#a3340c9b997f5b53a0131cf927f93b54c
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0,1);
+    auto normal_dist = [&] (double) {return distribution(generator);};
+
+    Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
+
     for (int i = 0; i < T; i++) {
         Eigen::VectorXd th      = mu_t + C_t * xi.row(i).transpose();                    // II    - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 

@@ -90,7 +90,7 @@ compute_GVA_Rcpp <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, 
     xi          <- matrix(stats::rnorm(T*p),T,p)                # I     - Draw xi
     
     if (fullCpp) {
-        res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, xi, 
+        res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, 
                                            rho, elip, a, T, T2, p, verbosity)
         res$mu_FC    <- matrix(res$mu_FC, nrow = p, ncol = 1)
         # C_t     <- res$C_t
