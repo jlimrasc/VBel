@@ -4,19 +4,23 @@
 # -----------------------------
 # Initialise Variables
 # -----------------------------
+# Generate toy variables
 set.seed(1)
 x    <- runif(30, min = -5, max = 5)
 elip <- rnorm(30, mean = 0, sd = 1)
 y    <- 0.75 - x + elip
+
+# Set initial values for AEL computation
 lam0 <- matrix(c(0,0), nrow = 2)
 th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-a <- 0.001
+a    <- 0.00001
+
+# Define Dataset and h-function
 z    <- cbind(x, y)
 h    <- function(z, th) {
     xi <- z[1]
     yi <- z[2]
-    h_zith <- c(yi - th[1] - th[2] * xi)
-    h_zith[2] <- xi * h_zith[1]
+    h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
     matrix(h_zith, nrow = 2)
 }
 

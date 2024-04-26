@@ -64,14 +64,18 @@ devtools::install_github("jlimrasc/VBel")
 ```{r}
 library(VBel)
 
-# Set up variables
+# Generate toy variables
 set.seed(1)
 x    <- runif(30, min = -5, max = 5)
 elip <- rnorm(30, mean = 0, sd = 1)
 y    <- 0.75 - x + elip
+
+# Set initial values for AEL computation
 lam0 <- matrix(c(0,0), nrow = 2)
 th   <- matrix(c(0.8277, -1.0050), nrow = 2)
 a    <- 0.00001
+
+# Define Dataset and h-function
 z    <- cbind(x, y)
 h    <- function(z, th) {
     xi <- z[1]
@@ -80,25 +84,27 @@ h    <- function(z, th) {
     matrix(h_zith, nrow = 2)
 }
 
+# Define h-gradient function
 delthh    <- function(z, th) {
     xi <- z[1]
     matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
 }
 
-n <- 31
+# Set initial values for GVA computation
+n <- 31 # Number of rows in z
 reslm <- lm(y ~ x)
 mu <- matrix(unname(reslm$coefficients),2,1)
 C_0 <- unname(t(chol(vcov(reslm))))
-
-delth_logpi <- function(theta) {-0.0001 * mu}
-elip <- 10^-5
-T <- 10
-T2 <- 500
 rho <- 0.9
 
-# Excecute function
+# Set other variables for GVA
+delth_logpi <- function(theta) {-0.0001 * mu}
+elip <- 10^-5
+T <- 10 # Number of iterations for GVA
+T2 <- 500 # Number of iterations for AEL
+
+# Excecute functions
 ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T2)
-set.seed(1)
 ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
 ```
 
