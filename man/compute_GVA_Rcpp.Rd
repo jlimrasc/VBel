@@ -112,6 +112,11 @@ ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0,
 rho, elip, a, T, T2, fullCpp = TRUE)
 
 }
+\references{
+Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and
+Accurate Empirical Likelihood Inference. Journal of the American Statistical
+Association, 1–13. \url{https://doi.org/10.1080/01621459.2023.2169701}
+}
 \author{
 Wei Chang Yu, Jeremy Lim
 }

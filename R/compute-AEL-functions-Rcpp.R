@@ -21,6 +21,10 @@
 #' @export
 #' 
 #' @author Wei Chang Yu, Jeremy Lim
+#' @references Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and 
+#' Accurate Empirical Likelihood Inference. Journal of the American Statistical 
+#' Association, 1–13. \url{https://doi.org/10.1080/01621459.2023.2169701}
+#' 
 #' @examples
 #' # Generate toy variables
 #' set.seed(1)
@@ -32,7 +36,7 @@
 #' lam0 <- matrix(c(0,0), nrow = 2)
 #' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
 #' a    <- 0.00001
-#' T    <- 100
+#' T    <- 10
 #' 
 #' # Define Dataset and h-function
 #' z    <- cbind(x, y)

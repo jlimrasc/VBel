@@ -42,7 +42,7 @@ y    <- 0.75 - x + elip
 lam0 <- matrix(c(0,0), nrow = 2)
 th   <- matrix(c(0.8277, -1.0050), nrow = 2)
 a    <- 0.00001
-T    <- 100
+T    <- 10
 
 # Define Dataset and h-function
 z    <- cbind(x, y)
@@ -53,6 +53,11 @@ h    <- function(z, th) {
     matrix(h_zith, nrow = 2)
 }
 ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz = TRUE)
+}
+\references{
+Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and
+Accurate Empirical Likelihood Inference. Journal of the American Statistical
+Association, 1–13. \url{https://doi.org/10.1080/01621459.2023.2169701}
 }
 \author{
 Wei Chang Yu, Jeremy Lim
