@@ -5,12 +5,12 @@ Version: 1.0
 Date: 2024-03-07
 Authors@R: c(
     person("Wei-Chang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut")),
-    person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = "cre")
+    person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = c("cre", "aut"))
   )
 Description: Functions for computing the Gaussian Variational Approximation of
-    the Bayesian Empirical Likelihood Posterior. This is an implementation of
+    the Bayesian Empirical Likelihood Posterior. This is an implementation of 
     the function found in Yu, W., & Bondell, H. D. (2023) 
-    <https://doi.org/10.1080/01621459.2023.2169701>
+    <https://doi.org/10.1080/01621459.2023.2169701>.
 License: GPL (>= 3)
 Imports: 
     Rcpp (>= 1.0.12),
