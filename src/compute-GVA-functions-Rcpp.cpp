@@ -97,20 +97,23 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
 
     for (int i = 0; i < T; i++) {
-        Eigen::VectorXd th      = mu_t + C_t * xi.row(i).transpose();                    // II    - Set theta
+        Eigen::VectorXd th      = mu_t + C_t * xi.row(i).transpose();                       // II   - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
                                        lam0, z, n, a, p, T2);
         // Rcpp::List res = Rcpp::List::create(_["gmu"] = gmu);
         // return(res);
-        Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
-        delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
-        mu_t = mu_t + delmu;                                        // VI    - Update mean
-        Edelmu = rho * Edelmu + (1 - rho) * delmu.cwiseProduct(delmu);      // VII   - Accumulate updates
-        gC_t = (compute_nabC_ELBO_Rcpp(gmu, xi.row(i), C_t)).triangularView<Eigen::Lower>();          // VIII  - Compute g_C^{t+1}
-        EgC = rho * EgC + (1 - rho) * gC_t.cwiseProduct(gC_t);           // IX    - Accumulate gradients
-        delC    = ((EdelC + elip * M).cwiseSqrt().array() / (EgC + elip * M).cwiseSqrt().array() * gC_t.array()).matrix();     // X     - Compute update
-        C_t     = C_t + delC;                            // XI    - Update covariance Cholesky
-        EgC     = rho * EgC + (1 - rho) * delC.cwiseProduct(delC);        // XII   - Accumulate updates
+        Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);                              // IV   - Accumulate gradients
+        delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / 
+            (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * 
+            gmu.array()).matrix();                                                          // V     - Compute update
+        mu_t = mu_t + delmu;                                                                // VI   - Update mean
+        Edelmu = rho * Edelmu + (1 - rho) * delmu.cwiseProduct(delmu);                      // VII  - Accumulate updates
+        gC_t = (compute_nabC_ELBO_Rcpp(gmu, xi.row(i), C_t)).triangularView<Eigen::Lower>();// VIII - Compute g_C^{t+1}
+        EgC = rho * EgC + (1 - rho) * gC_t.cwiseProduct(gC_t);                              // IX   - Accumulate gradients
+        delC    = ((EdelC + elip * M).cwiseSqrt().array() / 
+            (EgC + elip * M).cwiseSqrt().array() * gC_t.array()).matrix();                  // X     - Compute update
+        C_t     = C_t + delC;                                                               // XI   - Update covariance Cholesky
+        EgC     = rho * EgC + (1 - rho) * delC.cwiseProduct(delC);                          // XII  - Accumulate updates
         
         // Store
         mu_arr.col(i+1) = mu_t;
