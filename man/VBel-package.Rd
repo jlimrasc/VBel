@@ -25,14 +25,12 @@ Maintainer: \packageMaintainer{VBel}
 }
 \keyword{ package }
 \seealso{
-\code{\link[=compute_AEL_R]{compute_AEL_R()}} for R computation of AEL
-
 \code{\link[=compute_AEL_Rcpp]{compute_AEL_Rcpp()}} for mix of R and C++ computation of AEL
-
-\code{\link[=compute_GVA_R]{compute_GVA_R()}} for R computation of GVA
 
 \code{\link[=compute_GVA_Rcpp]{compute_GVA_Rcpp()}} for mix of R and C++ computation of GVA
 }
 \examples{
-ansGVARcppPure <- compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+
+#ansGVARcppPure <- compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, 
+#rho, elip, a, T, T2, fullCpp = TRUE)
 }

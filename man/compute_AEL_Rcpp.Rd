@@ -2,8 +2,7 @@
 % Please edit documentation in R/compute-AEL-functions-Rcpp.R
 \name{compute_AEL_Rcpp}
 \alias{compute_AEL_Rcpp}
-\title{Computes Adjusted Empirical Likelihood Interference for a data set using R and C++
-with RcppEigen}
+\title{Adjusted Empirical Likelihood}
 \usage{
 compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz, returnH)
 }
@@ -25,14 +24,36 @@ compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz, returnH)
 \item{returnH}{Whether to return calculated values of h, H matrix and lambda}
 }
 \value{
-The AEL of the data set
+A numeric value for the Adjusted Empirical Likelihood function
+computed evaluated at a given theta value
 }
 \description{
-\code{compute_AEL_Rcpp} returns the result of running AEL with the values present in the arguments.
+Function for evaluating the Adjusted Empirical Likelihood for a given
+data set, moment conditions and parameter values
 }
 \examples{
-compute_AEL_Rcpp(matrix(c(0.8277, -1.0050), nrow = 2), function(z, th) {matrix(c(z[2] - th[1] - th[2] * z[1], z[1]*(z[2] - th[1] - th[2] * z[1])), nrow = 2)}, matrix(c(0,0), nrow = 2), 0.001, cbind(runif(30, min = -5, max = 5), 0.75 - runif(30, min = -5, max = 5) + rnorm(30, mean = 0, sd = 1)))
+# Generate toy variables
+set.seed(1)
+x    <- runif(30, min = -5, max = 5)
+elip <- rnorm(30, mean = 0, sd = 1)
+y    <- 0.75 - x + elip
+
+# Set initial values for AEL computation
+lam0 <- matrix(c(0,0), nrow = 2)
+th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+a    <- 0.00001
+T    <- 100
+
+# Define Dataset and h-function
+z    <- cbind(x, y)
+h    <- function(z, th) {
+    xi <- z[1]
+    yi <- z[2]
+    h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+    matrix(h_zith, nrow = 2)
 }
-\seealso{
-\code{\link[=compute_AEL_R]{compute_AEL_R()}} for purely R computation
+ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz = TRUE)
+}
+\author{
+Wei Chang Yu, Jeremy Lim
 }

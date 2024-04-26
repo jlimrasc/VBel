@@ -1,13 +1,16 @@
 Package: VBel
 Type: Package
-Title: Variational Bayes for fast and accurate Empirical Likelihood Inference
+Title: Variational Bayes for Fast and Accurate Empirical Likelihood Inference
 Version: 1.0
 Date: 2024-03-07
 Authors@R: c(
     person("Wei-Chang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut")),
     person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = "cre")
   )
-Description: More about what it does (maybe more than one line)
+Description: Functions for computing the Gaussian Variational Approximation of
+    the Bayesian Empirical Likelihood Posterior. This is an implementation of
+    the function found in Yu, W., & Bondell, H. D. (2023) 
+    <https://doi.org/10.1080/01621459.2023.2169701>
 License: GPL (>= 3)
 Imports: 
     Rcpp (>= 1.0.12),

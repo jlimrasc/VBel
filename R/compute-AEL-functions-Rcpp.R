@@ -1,8 +1,8 @@
-#' Computes Adjusted Empirical Likelihood Interference for a data set using R and C++
-#' with RcppEigen
+#' @title Adjusted Empirical Likelihood
 #' 
 #' @description 
-#' `compute_AEL_Rcpp` returns the result of running AEL with the values present in the arguments.
+#' Function for evaluating the Adjusted Empirical Likelihood for a given 
+#' data set, moment conditions and parameter values
 #' 
 #' @param th        Vector or scalar theta
 #' @param h         User-defined function, outputs array
@@ -13,15 +13,36 @@
 #' @param useR_forz Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)
 #' @param returnH   Whether to return calculated values of h, H matrix and lambda
 #'
-#' @return The AEL of the data set
+#' @return A numeric value for the Adjusted Empirical Likelihood function 
+#' computed evaluated at a given theta value
+#' 
 #' @useDynLib VBel, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @export
-#'
-#' @seealso [compute_AEL_R()] for purely R computation
 #' 
-#' @examples compute_AEL_Rcpp(matrix(c(0.8277, -1.0050), nrow = 2), function(z, th) {matrix(c(z[2] - th[1] - th[2] * z[1], z[1]*(z[2] - th[1] - th[2] * z[1])), nrow = 2)}, matrix(c(0,0), nrow = 2), 0.001, cbind(runif(30, min = -5, max = 5), 0.75 - runif(30, min = -5, max = 5) + rnorm(30, mean = 0, sd = 1)))
-
+#' @author Wei Chang Yu, Jeremy Lim
+#' @examples
+#' # Generate toy variables
+#' set.seed(1)
+#' x    <- runif(30, min = -5, max = 5)
+#' elip <- rnorm(30, mean = 0, sd = 1)
+#' y    <- 0.75 - x + elip
+#' 
+#' # Set initial values for AEL computation
+#' lam0 <- matrix(c(0,0), nrow = 2)
+#' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' a    <- 0.00001
+#' T    <- 100
+#' 
+#' # Define Dataset and h-function
+#' z    <- cbind(x, y)
+#' h    <- function(z, th) {
+#'     xi <- z[1]
+#'     yi <- z[2]
+#'     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+#'     matrix(h_zith, nrow = 2)
+#' }
+#' ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T, useR_forz = TRUE)
 compute_AEL_Rcpp <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
     
     # -----------------------------

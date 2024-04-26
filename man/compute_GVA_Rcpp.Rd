@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-GVA-functions-Rcpp.R
 \name{compute_GVA_Rcpp}
 \alias{compute_GVA_Rcpp}
-\title{Computes Full-Covariance Gaussian VB posterior in R and C++}
+\title{Full-Covariance Gaussian VB Empirical Likelihood Posterior}
 \usage{
 compute_GVA_Rcpp(
   mu,
@@ -55,14 +55,18 @@ compute_GVA_Rcpp(
 }
 \value{
 A list containing:  \enumerate{
-\item A vector mu_FC
-\item A matrix C_FC
-\item An array mu_FC_arr
-\item An array C_FC_arr.
-} Access using those names. If returnAll is TRUE, also inludes gmu, Egmu, delmu, Edelmu, gC_t, EgC, delC
+\item mu_FC: VB Posterior Mean at final iteration. A vector of
+size p x 1
+\item C_FC: VB Posterior Variance-Covariance (Cholesky) at
+final iteration. A lower-triangular matrix of size p x p
+\item mu_FC_arr: VB Posterior Mean for each iteration. A matrix
+of size p x T+1
+\item C_FC_arr: VB Posterior Variance-Covariance (Cholesky) for
+each iteration. An array of size p x p x T
+}
 }
 \description{
-Computes Full-Covariance Gaussian VB posterior in R and C++
+Function for computing the Full-Covariance Gaussian VB Empirical Likelihood Posterior
 }
 \examples{
 set.seed(1)
@@ -93,7 +97,7 @@ C_0 <- unname(t(chol(vcov(reslm))))
 delth_logpi <- function(theta) {-0.0001 * mu}
 elip <- 10^-5
 T <- 10
-T2 <- 500
+T2 <- 50
 rho <- 0.9
 
 # -----------------------------
@@ -101,11 +105,13 @@ rho <- 0.9
 # -----------------------------
 options(digits = 20)
 set.seed(1)
-ansGVARcppHalf <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
+ansGVARcppHalf <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, 
+rho, elip, a, T, T2, fullCpp = FALSE)
 set.seed(1)
-ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, 
+rho, elip, a, T, T2, fullCpp = TRUE)
 
 }
-\seealso{
-\code{\link[=compute_GVA_R]{compute_GVA_R()}} for purely R computation
+\author{
+Wei Chang Yu, Jeremy Lim
 }
