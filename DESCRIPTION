@@ -4,7 +4,7 @@ Title: Variational Bayes for fast and accurate Empirical Likelihood Inference
 Version: 1.0
 Date: 2024-03-07
 Authors@R: c(
-    person("Wei-Chang", "Yu", , "w.yu@maths.usyd.edu.au", role = c("aut")),
+    person("Wei-Chang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut")),
     person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = "cre")
   )
 Description: More about what it does (maybe more than one line)
