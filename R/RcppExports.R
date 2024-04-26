@@ -20,20 +20,5 @@ compute_GVA_Rcpp_inner_IVtoXII <- function(rho, elip, Egmu, Edelmu, EgC, EdelC, 
 compute_GVA_Rcpp_inner_full <- function(mu, C, h, delthh, delth_logpi, z, lam0, xi, rho, elip, a, T, T2, p, verbosity) {
     .Call(`_VBel_compute_GVA_Rcpp_inner_full`, mu, C, h, delthh, delth_logpi, z, lam0, xi, rho, elip, a, T, T2, p, verbosity)
 }
-
-rcppeigen_hello_world <- function() {
-    .Call(`_VBel_rcppeigen_hello_world`)
-}
-
-rcppeigen_outerproduct <- function(x) {
-    .Call(`_VBel_rcppeigen_outerproduct`, x)
-}
-
-rcppeigen_innerproduct <- function(x) {
-    .Call(`_VBel_rcppeigen_innerproduct`, x)
-}
-
-rcppeigen_bothproducts <- function(x) {
-    .Call(`_VBel_rcppeigen_bothproducts`, x)
 }
 
