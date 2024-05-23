@@ -30,17 +30,25 @@ Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, 
 Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Function delthh, 
                                         Eigen::VectorXd theta, Rcpp::Function h, 
                                         Eigen::VectorXd lam0, Eigen::MatrixXd z, 
-                                        int n, double a, int p, int T2) {
+                                        int n, double a, int p, int T2, int i_out) {
     Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     Eigen::MatrixXd lambda              = res["lambda"];
     std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
     Eigen::VectorXd hznth               = h_arr[n-1];
+    if (lambda.hasNaN()) {
+        Rcpp::Rcout << "Lamabda Iteration: " << i_out << " has NaN:\n" << lambda << std::endl;
+    }
+    
 
     // Calculate gradient LogAEL with respect to theta
     Eigen::VectorXd nabth_logAEL = Eigen::VectorXd::Zero(p); // Vector
     Eigen::MatrixXd delthh_zith;
     for (int i = 0; i < n-1; i++) {
         nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array()))(0,0) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
+        if (h_arr[i].hasNaN()) {
+            Rcpp::Rcout << "h_arr[" << i << "] Iteration: " << i_out << "has NaN\n" << h_arr[i] << std::endl;
+            break;
+        }
     }
     
     Eigen::VectorXd nabmu_ELBO = (nabth_logAEL.array() + Rcpp::as<Eigen::VectorXd>(delth_logpi(theta)).array()).matrix();
@@ -97,9 +105,9 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
 
     for (int i = 0; i < T; i++) {
-        Eigen::VectorXd th      = mu_t + C_t * xi.row(i).transpose();                       // II   - Set theta
+        Eigen::VectorXd th = mu_t + C_t * xi.row(i).transpose();                           // II   - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
-                                       lam0, z, n, a, p, T2);
+                                       lam0, z, n, a, p, T2, i);
         // Rcpp::List res = Rcpp::List::create(_["gmu"] = gmu);
         // return(res);
         Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);                              // IV   - Accumulate gradients
@@ -120,6 +128,10 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
         C_arr.push_back(C_t);
         
         if (verbosity && (i+1) % verbosity == 0) { Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;}
+        if (mu_t.hasNaN() || C_t.hasNaN()) {
+            Rcpp::Rcout << "NaN found in calculation. Terminating early. Please run function again.\n";
+            break;
+        }
     }
     
     Rcpp::List res = Rcpp::List::create(

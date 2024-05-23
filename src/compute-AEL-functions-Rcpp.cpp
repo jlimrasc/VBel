@@ -138,7 +138,7 @@ Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     int n = z.rows() + 1;
     int d = z.cols();
     vector<VectorXd> h_list(n);
-    MatrixXd H_Zth(n,d), h_znth(1, 2);
+    MatrixXd H_Zth(n,d), h_znth(1, d);
     VectorXd h_zith(d);
     
     for (int i = 0; i < n - 1; i++) {

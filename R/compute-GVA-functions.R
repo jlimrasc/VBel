@@ -1,4 +1,8 @@
-#' Computes Full-Covariance Gaussian VB posterior in R
+#' @title Full-Covariance Gaussian VB Empirical Likelihood Posterior
+#' 
+#' @description
+#' Function for computing the Full-Covariance Gaussian VB Empirical Likelihood Posterior
+#' 
 #'
 #' @param mu            Column vector, initial value of Gaussian VB mean
 #' @param C             Lower Triangular Matrix, initial value of Gaussian VB Cholesky
@@ -12,19 +16,27 @@
 #' @param a             Scalar AEL constant, must be >0, small values recommended
 #' @param T             Number of iterations for GVA (default:10,000)
 #' @param T2            Number of iterations for Log AEL (default:500)
+#' @param fullCpp       Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)
 #' @param verbosity     Integer for how often to print updates on current iteration number (default:500)
 #' @param returnAll     Bool whether to return result for every line of the last iteration (default:FALSE)
 #'
 #' @returns A list containing:  \enumerate{
-#'              \item A vector mu_FC
-#'              \item A matrix C_FC 
-#'              \item An array mu_FC_arr 
-#'              \item An array C_FC_arr. 
-#'              } Access using those names. If returnAll is TRUE, also inludes gmu, Egmu, delmu, Edelmu, gC_t, EgC, delC
-#'
+#'              \item mu_FC: VB Posterior Mean at final iteration. A vector of 
+#'              size p x 1
+#'              \item C_FC: VB Posterior Variance-Covariance (Cholesky) at 
+#'              final iteration. A lower-triangular matrix of size p x p
+#'              \item mu_FC_arr: VB Posterior Mean for each iteration. A matrix 
+#'              of size p x T+1
+#'              \item C_FC_arr: VB Posterior Variance-Covariance (Cholesky) for 
+#'              each iteration. An array of size p x p x T
+#'              }
+#' 
 #' @export
-#'
-#' @seealso [compute_GVA_Rcpp()] for mix of R and C++ computation
+#' 
+#' @author Wei Chang Yu, Jeremy Lim
+#' @references Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and 
+#' Accurate Empirical Likelihood Inference. Journal of the American Statistical 
+#' Association, 1–13. \url{https://doi.org/10.1080/01621459.2023.2169701}
 #' 
 #' @examples
 #' set.seed(1)
@@ -33,7 +45,7 @@
 #' y    <- 0.75 - x + elip
 #' lam0 <- matrix(c(0,0), nrow = 2)
 #' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-#' a    <- 0.00001
+#' a <- 0.00001
 #' z    <- cbind(x, y)
 #' h    <- function(z, th) {
 #'     xi <- z[1]
@@ -55,7 +67,7 @@
 #' delth_logpi <- function(theta) {-0.0001 * mu}
 #' elip <- 10^-5
 #' T <- 10
-#' T2 <- 500
+#' T2 <- 50
 #' rho <- 0.9
 #' 
 #' # -----------------------------
@@ -63,94 +75,115 @@
 #' # -----------------------------
 #' options(digits = 20)
 #' set.seed(1)
-#' ansGVA <-compute_GVA_R(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+#' ansGVARcppHalf <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
+#' rho, elip, a, T, T2, fullCpp = FALSE)
+#' set.seed(1)
+#' ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
+#' rho, elip, a, T, T2, fullCpp = TRUE)
 #' 
-compute_GVA_R <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, verbosity, returnAll) {
+compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp, verbosity, returnAll) {
     # Initialise values
     if (missing(T)) { T <- 10000 }
     if (missing(T2)) { T2 <- 500 }
+    if (missing(fullCpp)) { fullCpp <- TRUE }
     if (missing(verbosity)) { verbosity <- 500 }
     if (missing(returnAll)) { returnAll <- FALSE }
     
     p           <- nrow(C)
-    Egmu        <- numeric(p)
-    Edelmu      <- numeric(p)
-    EgC         <- matrix(0, nrow = p, ncol = p)
-    EdelC       <- matrix(0, nrow = p, ncol = p)
-    mu_t        <- mu
-    mu_arr      <- matrix(0,nrow = p, ncol = T+1)#array(dim = c(dim(mu_t), T+1))
-    mu_arr[,1]  <- mu_t
-    C_t         <- C        # Covariance Cholesky
-    C_arr       <- array(dim = c(dim(C_t), T+1))
-    C_arr[,,1]  <- C_t
-    M           <- matrix(1,p,p)
-    n           <- nrow(z) + 1
-
-    xi          <- matrix(stats::rnorm(T*p),T,p)                   # I     - Draw xi
+    xi          <- matrix(stats::rnorm(T*p),T,p)                # I     - Draw xi
     
-    for (i in 1:(T)) {
-        th      <- mu_t + C_t %*% xi[i,]                    # II    - Set theta
-        gmu     <- compute_nabmu_ELBO(delth_logpi, delthh, 
-                                      th, h, lam0, z, 
-                                      n, a, T2)             # III   - Compute g_{mu}^{t+1}
-        Egmu    <- rho * Egmu + (1 - rho) * gmu^2           # IV    - Accumulate gradients
-        delmu   <- sqrt(Edelmu + elip * rep(1,p)) / 
-            sqrt(Egmu + elip * rep(1,p)) * gmu              # V     - Compute update
-        mu_t    <- mu_t + delmu                             # VI    - Update mean
-        Edelmu  <- rho * Edelmu + (1 - rho) * delmu^2       # VII   - Accumulate updates
-        gC_t    <- compute_nabC_ELBO(gmu, xi[i,], C_t)      # VIII  - Compute g_C^{t+1}
-        gC_t[upper.tri(gC_t)] <- 0                          #       - Set gC_t to lower triag matx
-        EgC     <- rho * EgC + (1 - rho) * gC_t^2           # IX    - Accumulate gradients
-        delC    <- sqrt(EdelC + elip * M) / 
-            sqrt(EgC + elip * M) * gC_t                     # X     - Compute update
-        C_t     <- C_t + delC                               # XI    - Update covariance Cholesky
-        EgC     <- rho * EgC + (1 - rho) * delC^2           # XII   - Accumulate updates
-        # Store
-        mu_arr[,i+1]   <- mu_t
-        C_arr[,,i+1]    <- C_t
+    if (fullCpp) {
+        res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, 
+                                           rho, elip, a, T, T2, p, verbosity)
+        res$mu_FC    <- matrix(res$mu_FC, nrow = p, ncol = 1)
+        # C_t     <- res$C_t
+        res$Egmu    <- matrix(res$Egmu, nrow = p, ncol = 1)
+        res$delmu   <- matrix(res$delmu, nrow = p, ncol = 1)
+        res$Edelmu  <- matrix(res$Edelmu, nrow = p, ncol = 1)
+        res$gmu     <- matrix(res$gmu, nrow = p, ncol = 1)
+        # gC_t    <- res$gC_t
+        # EgC     <- res$EgC
+        # delC    <- res$delC
         
-        if (verbosity && i %% verbosity == 0) { cat("Iteration:", i, "\n") }
-    }
-
-    if (!returnAll) {
-        return(list(
-            "mu_FC"  = mu_t,
-            "C_FC"   = C_t,
-            "mu_arr" = mu_arr,
-            "C_arr"  = C_arr
-        ))
+        
+        # Store
+        mu_arr  <- res$mu_arr
+        C_arr   <- array(unlist(res$C_arr), dim = c(dim(C),T+1))
+        res$C_arr <- C_arr
+        
     } else {
-        return(list(
+        Egmu        <- numeric(p)
+        Edelmu      <- numeric(p)
+        EgC         <- matrix(0, nrow = p, ncol = p)
+        EdelC       <- matrix(0, nrow = p, ncol = p)
+        mu_t        <- mu
+        mu_arr      <- matrix(0,nrow = p, ncol = T+1)#array(dim = c(dim(mu_t), T+1))
+        mu_arr[,1]  <- mu_t
+        C_t         <- C        # Covariance Cholesky
+        C_arr       <- array(dim = c(dim(C_t), T+1))
+        C_arr[,,1]  <- C_t
+        M           <- matrix(1,p,p)
+        n           <- nrow(z) + 1
+        
+        for (i in 1:(T)) {
+            th      <- mu_t + C_t %*% xi[i,]                    # II    - Set theta
+            gmu     <- compute_nabmu_ELBO_RcppfromR(delth_logpi, delthh, 
+                                                    th, h, lam0, z, 
+                                                    n, a, T2)             # III   - Compute g_{mu}^{t+1}
+            res <- compute_GVA_Rcpp_inner_IVtoXII(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i-1)
+            mu_t    <- res[[1]]
+            C_t     <- res[[2]]
+            Egmu    <- res[[3]]
+            delmu   <- res[[4]]
+            Edelmu  <- res[[5]]
+            gC_t    <- res[[6]]
+            EgC     <- res[[7]]
+            delC    <- res[[8]]
+            gmu     <- res[[9]]
+            # Store
+            mu_arr[,i+1]   <- mu_t
+            C_arr[,,i+1]    <- C_t
+            if (verbosity && i %% verbosity == 0) { cat("Iteration:", i, "\n") }
+        }
+        res <- list(
             "mu_FC"  = mu_t,
             "C_FC"   = C_t,
             "mu_arr" = mu_arr,
             "C_arr"  = C_arr,
             "gmu"    = gmu,
             "Egmu"   = Egmu,
-            "delmu"  = delmu, 
-            "Edelmu" = Edelmu, 
+            "delmu"  = delmu,
+            "Edelmu" = Edelmu,
             "gC_t"   = gC_t, 
             "EgC"    = EgC, 
             "delC"   = delC
-        ))
+        )
+    }
+    
+    if (!returnAll) {
+        res2 <- list(
+            "mu_FC"  = res$mu_FC,
+            "C_FC"   = res$C_FC,
+            "mu_arr" = res$mu_arr,
+            "C_arr"  = res$C_arr
+        )
+        return(res2)
+    } else {
+        return(res)
     }
 }
 
-compute_nabmu_ELBO <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) { 
-    res <- compute_AEL_R(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) {
+    res <- compute_AEL_Rcpp(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     lambda <- res$"lambda"
     h_arr <- res$"h_arr"
     hznth <- h_arr[,,n]
-
+    
     # Calculate gradient LogAEL with respect to theta
-    nabth_logAEL <- 0 # Vector
+    nabth_logAEL <- 0 # Matrix
     for (i in 1:(n-1)) {
         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
     }
+    # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
-}
-
-
-compute_nabC_ELBO <- function(gmu, xi, C_t) {
-    nabC_ELBO <- gmu %*% t(xi) + diag(1/diag(C_t))
 }

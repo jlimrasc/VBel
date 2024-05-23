@@ -23,5 +23,6 @@ RoxygenNote: 7.3.1
 URL: https://github.com/jlimrasc/VBel
 BugReports: https://github.com/jlimrasc/VBel/issues
 Suggests: 
+    mvtnorm,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
