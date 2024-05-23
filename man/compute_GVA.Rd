@@ -18,8 +18,7 @@ compute_GVA(
   T,
   T2,
   fullCpp,
-  verbosity,
-  returnAll
+  verbosity
 )
 }
 \arguments{
@@ -50,8 +49,6 @@ compute_GVA(
 \item{fullCpp}{Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)}
 
 \item{verbosity}{Integer for how often to print updates on current iteration number (default:500)}
-
-\item{returnAll}{Bool whether to return result for every line of the last iteration (default:FALSE)}
 }
 \value{
 A list containing:  \enumerate{

@@ -18,7 +18,6 @@
 #' @param T2            Number of iterations for Log AEL (default:500)
 #' @param fullCpp       Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)
 #' @param verbosity     Integer for how often to print updates on current iteration number (default:500)
-#' @param returnAll     Bool whether to return result for every line of the last iteration (default:FALSE)
 #'
 #' @returns A list containing:  \enumerate{
 #'              \item mu_FC: VB Posterior Mean at final iteration. A vector of 
@@ -81,30 +80,26 @@
 #' ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
 #' rho, elip, a, T, T2, fullCpp = TRUE)
 #' 
-compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp, verbosity, returnAll) {
+compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp, verbosity) {
     # Initialise values
     if (missing(T)) { T <- 10000 }
     if (missing(T2)) { T2 <- 500 }
     if (missing(fullCpp)) { fullCpp <- TRUE }
     if (missing(verbosity)) { verbosity <- 500 }
-    if (missing(returnAll)) { returnAll <- FALSE }
-    
+    returnAll   <- FALSE
+
     p           <- nrow(C)
     xi          <- matrix(stats::rnorm(T*p),T,p)                # I     - Draw xi
     
     if (fullCpp) {
         res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, 
                                            rho, elip, a, T, T2, p, verbosity)
-        res$mu_FC    <- matrix(res$mu_FC, nrow = p, ncol = 1)
-        # C_t     <- res$C_t
+        res$mu_FC   <- matrix(res$mu_FC, nrow = p, ncol = 1)
         res$Egmu    <- matrix(res$Egmu, nrow = p, ncol = 1)
         res$delmu   <- matrix(res$delmu, nrow = p, ncol = 1)
         res$Edelmu  <- matrix(res$Edelmu, nrow = p, ncol = 1)
         res$gmu     <- matrix(res$gmu, nrow = p, ncol = 1)
-        # gC_t    <- res$gC_t
-        # EgC     <- res$EgC
-        # delC    <- res$delC
-        
+
         
         # Store
         mu_arr  <- res$mu_arr
@@ -174,7 +169,7 @@ compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T,
 }
 
 compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, T2) {
-    res <- compute_AEL_Rcpp(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+    res <- compute_AEL(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     lambda <- res$"lambda"
     h_arr <- res$"h_arr"
     hznth <- h_arr[,,n]
@@ -184,6 +179,5 @@ compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z,
     for (i in 1:(n-1)) {
         nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
     }
-    # browser()
     nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
 }

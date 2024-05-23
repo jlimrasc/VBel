@@ -54,12 +54,23 @@ test_that("GVA outputs right length, 10x10", {
     # R & C++ make it difficult to test for number similarities)
     expect_length(ansGVARcppPure$mu_FC, p)
     expect_length(ansGVARcppHalf$mu_FC, p)
+    
     expect_length(ansGVARcppPure$mu_arr, (T+1)*p)
     expect_length(ansGVARcppHalf$mu_arr, (T+1)*p)
+    
     expect_length(ansGVARcppPure$C_FC, p*p)
     expect_length(ansGVARcppHalf$C_FC, p*p)
+
+    # C_FC is upper triangular
+    expect_equal(ansGVARcppHalf$C_FC[upper.tri(ansGVARcppHalf$C_FC)],rep(0,p*(p-1)/2))
+    expect_equal(ansGVARcppPure$C_FC[upper.tri(ansGVARcppPure$C_FC)],rep(0,p*(p-1)/2))
+
+    
     expect_length(ansGVARcppPure$C_arr, (T+1)*p*p)
-    expect_length(ansGVARcppHalf$C_arr, (T+1)*p*p) 
+    expect_length(ansGVARcppHalf$C_arr, (T+1)*p*p)
+    
+    expect_length(ansGVARcppHalf, 4)
+    expect_length(ansGVARcppPure, 4)
     
     set.seed(NULL)
 })
