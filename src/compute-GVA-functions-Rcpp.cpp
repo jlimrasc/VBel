@@ -36,7 +36,7 @@ Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Functi
     std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
     Eigen::VectorXd hznth               = h_arr[n-1];
     if (lambda.hasNaN()) {
-        Rcpp::Rcout << "Lamabda Iteration: " << i_out << " has NaN:\n" << lambda << std::endl;
+        Rcpp::Rcout << "\nLambda Iteration: " << i_out << " has NaN:\n" << lambda << std::endl;
     }
     
 
@@ -129,6 +129,8 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
         
         if (verbosity && (i+1) % verbosity == 0) { Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;}
         if (mu_t.hasNaN() || C_t.hasNaN()) {
+            Rcpp::Rcout << "xi\n" << xi.row(i) << std::endl;
+            Rcpp::Rcout << "th\n" << th << std::endl;
             Rcpp::Rcout << "NaN found in calculation. Terminating early. Please run function again.\n";
             break;
         }

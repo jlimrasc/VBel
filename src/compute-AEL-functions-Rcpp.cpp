@@ -60,7 +60,7 @@ Eigen::MatrixXd get_d2F_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixX
     // Diagonal matrix changes with respect to lambda's current guess so need 
     // to recompute each iteration
     Eigen::VectorXd D_arr(n);
-    Eigen::MatrixXd P(d,d), D(n,n);
+    Eigen::MatrixXd D(n,n); // no need P(d,d), 
     double wi, vi2;
     
     // Evaluate vi2
@@ -90,11 +90,17 @@ Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::
     MatrixXd P(d,d);
     
     for (int i = 0; i < T; i++) {
+        Rcpp::Rcout << i << "\nlam0\n" << lam0 << "\nlam prev\n" << lam_prev <<"\nwi\n" << wi_arr.transpose() << "\ndF\n" << dF << "\nP\n" << P << std::endl;
+        // if (wi_arr.hasNaN() || dF.hasNaN() || P.hasNaN() || lam_prev.hasNaN()) {
+        //     Rcpp::Rcout << i << "\nlam0\n" << lam0 << "\nlam prev\n" << lam_prev <<"\nwi\n" << wi_arr << "\ndF\n" << dF << "\nP\n" << P << std::endl;
+        // }
+        
         wi_arr = get_wi_arr_Rcpp(h_list, lam_prev, n); // Wi
         
         dF = get_dF_Rcpp(h_list, wi_arr, n, d); // dF
         
         P = get_d2F_Rcpp(h_list, H_Zth, wi_arr, n, d); // d2F
+        
         
         lam_prev = lam_prev - P.inverse() * dF;
         
@@ -121,6 +127,10 @@ Rcpp::List compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list,
     }
     log_AEL = -(accum + n * log(n));
     
+    if (H_Zth.hasNaN() || lambda.hasNaN() || std::isnan(log_AEL)) {
+        Rcpp::Rcout << "\nLam0\n" << lam0 << "\nLambda\n" << lambda << "\nH_Zth\n" << H_Zth << std::endl;
+    }
+    
     return Rcpp::List::create(
         Rcpp::Named("log_AEL")  = log_AEL,
         Rcpp::Named("lambda")   = lambda
@@ -138,7 +148,8 @@ Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     int n = z.rows() + 1;
     int d = z.cols();
     vector<VectorXd> h_list(n);
-    MatrixXd H_Zth(n,d), h_znth(1, d);
+    MatrixXd H_Zth = MatrixXd::Zero(n,d);
+    MatrixXd h_znth(1, d);
     VectorXd h_zith(d);
     
     for (int i = 0; i < n - 1; i++) {
@@ -152,13 +163,23 @@ Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     
     // Need brackets around  fraction for some reason? Maybe matrix mult takes priority?
     h_znth = -(a / (n - 1)) * H_Zth.colwise().sum();
+    Rcpp::Rcout << "\nH_znth\n" << H_Zth.colwise().sum() << "\n-a/(n-1) H_znth\n" << h_znth << std::endl;
+    Rcpp::Rcout << "\nLast col sum of H: " << H_Zth.col(d-1).sum() << std::endl;
     H_Zth.row(n - 1) = h_znth;
+    Rcpp::Rcout << "\nH\n" << H_Zth << std::endl;
     
     h_list[n - 1] = h_znth.row(0);
+    Rcpp::Rcout << "\nh1\n" << h_list[0] << std::endl;
+    Rcpp::Rcout << "\nhn\n" << h_list[n-1] << std::endl;
+    
     
     Rcpp::List res = compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
     res.push_back(h_list, "h_arr");
     res.push_back(H_Zth, "H_Zth");
+    MatrixXd lam = res["lambda"];
+    if (lam.hasNaN()) {
+        Rcpp::Rcout << "\nth" << th << std::endl;
+    }
     return res;
 }
 

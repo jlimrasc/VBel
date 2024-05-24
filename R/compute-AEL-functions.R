@@ -75,6 +75,7 @@ compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
         h_znth <- -a / (n - 1) * h_sum
         H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
         res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, T)
+        if (any(is.nan(res$lambda))) { browser() }
     } else {
         warning("Error: Incorrect input for useR_forz")
         return(NULL)
