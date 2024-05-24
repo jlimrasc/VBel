@@ -10,7 +10,7 @@
 #' @param delthh        User defined function, outputs k x p Jacobian matrix of h(zi,th) with respect to theta
 #' @param delth_logpi   User-defined function, outputs p x 1 matrix, derivative of log prior function
 #' @param z             Data matrix, n-1 x d matrix
-#' @param rho           Scalar (0 <~ 1) ADADELTA accumulation constant
+#' @param rho           Scalar (between 0 to 1, reccomended to be close to 1) ADADELTA accumulation constant
 #' @param elip          Scalar numeric stability constant. Should be specified with a small value
 #' @param lam0          Initial guess for lambda, k x 1 matrix
 #' @param a             Scalar AEL constant, must be >0, small values recommended
@@ -89,7 +89,6 @@ compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T,
     returnAll   <- FALSE
 
     p           <- nrow(C)
-    xi          <- matrix(stats::rnorm(T*p),T,p)                # I     - Draw xi
     
     if (fullCpp) {
         res <- compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, 
@@ -105,7 +104,7 @@ compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T,
         mu_arr  <- res$mu_arr
         C_arr   <- array(unlist(res$C_arr), dim = c(dim(C),T+1))
         res$C_arr <- C_arr
-        
+
     } else {
         Egmu        <- numeric(p)
         Edelmu      <- numeric(p)
@@ -119,12 +118,13 @@ compute_GVA <- function(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T,
         C_arr[,,1]  <- C_t
         M           <- matrix(1,p,p)
         n           <- nrow(z) + 1
+        xi          <- matrix(stats::rnorm(T*p),T,p)                        # I     - Draw xi
         
         for (i in 1:(T)) {
-            th      <- mu_t + C_t %*% xi[i,]                    # II    - Set theta
+            th      <- mu_t + C_t %*% xi[i,]                                # II    - Set theta
             gmu     <- compute_nabmu_ELBO_RcppfromR(delth_logpi, delthh, 
                                                     th, h, lam0, z, 
-                                                    n, a, T2)             # III   - Compute g_{mu}^{t+1}
+                                                    n, a, T2)               # III   - Compute g_{mu}^{t+1}
             res <- compute_GVA_Rcpp_inner_IVtoXII(rho, elip, Egmu, Edelmu, EgC, EdelC, gmu, mu_t, C_t, xi, M, p, i-1)
             mu_t    <- res[[1]]
             C_t     <- res[[2]]
