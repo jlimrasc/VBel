@@ -1,13 +1,14 @@
 # VBel
 
-Variational Bayes for fast and accurate empirical likelihood (AEL) inference
+Variational Bayes for fast and accurate empirical likelihood inference
 
 # About this package
 
-description
+This package allows you to run GVA on a data set in R, and C++ can be used for faster computation 
+(22.5 mins (1350.71s) for R, 40.23s for partial Rcpp and 28.5s for pure Rcpp computation for 10,000 iterations of GVA).
 
-This package allows you to run AEL on a data set in R, and can use C++ for faster computation 
-(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation).
+This package also allows you to run AEL on a data set in R, and C++ can be used for faster computation 
+(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation for 500 iterations of AEL).
 
 * * *
 
@@ -61,27 +62,50 @@ devtools::install_github("jlimrasc/VBel")
 
 # Toy example
 ```{r}
-library(VaDA)
-set.seed(1)
+library(VBel)
 
-# Set up variables
-x    <- runif(30, min = -5, max = 5) # Random Uniform Distribution
-elip <- rnorm(30, mean = 0, sd = 1)  # Random Normal Distribution
+# Generate toy variables
+set.seed(1)
+x    <- runif(30, min = -5, max = 5)
+elip <- rnorm(30, mean = 0, sd = 1)
 y    <- 0.75 - x + elip
+
+# Set initial values for AEL computation
 lam0 <- matrix(c(0,0), nrow = 2)
 th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-a <- 0.001
+a    <- 0.00001
+
+# Define Dataset and h-function
 z    <- cbind(x, y)
 h    <- function(z, th) {
     xi <- z[1]
     yi <- z[2]
-    h_zith <- c(yi - th[1] - th[2] * xi)
-    h_zith[2] <- xi * h_zith[1]
+    h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
     matrix(h_zith, nrow = 2)
 }
 
-# Excecute function
-compute_AEL_R(th, h, lam0, a, z)
+# Define h-gradient function
+delthh    <- function(z, th) {
+    xi <- z[1]
+    matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
+}
+
+# Set initial values for GVA computation
+n <- 31 # Number of rows in z
+reslm <- lm(y ~ x)
+mu <- matrix(unname(reslm$coefficients),2,1)
+C_0 <- unname(t(chol(vcov(reslm))))
+rho <- 0.9
+
+# Set other variables for GVA
+delth_logpi <- function(theta) {-0.0001 * mu}
+elip <- 10^-5
+T <- 10 # Number of iterations for GVA
+T2 <- 500 # Number of iterations for AEL
+
+# Excecute functions
+ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T2)
+ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
 ```
 
 * * *
