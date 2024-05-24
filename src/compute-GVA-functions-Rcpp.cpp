@@ -45,10 +45,6 @@ Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Functi
     Eigen::MatrixXd delthh_zith;
     for (int i = 0; i < n-1; i++) {
         nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array()))(0,0) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
-        if (h_arr[i].hasNaN()) {
-            Rcpp::Rcout << "h_arr[" << i << "] Iteration: " << i_out << "has NaN\n" << h_arr[i] << std::endl;
-            break;
-        }
     }
     
     Eigen::VectorXd nabmu_ELBO = (nabth_logAEL.array() + Rcpp::as<Eigen::VectorXd>(delth_logpi(theta)).array()).matrix();
@@ -103,7 +99,7 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     auto normal_dist = [&] (double) {return distribution(generator);};
 
     Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
-
+    
     for (int i = 0; i < T; i++) {
         Eigen::VectorXd th = mu_t + C_t * xi.row(i).transpose();                           // II   - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
@@ -129,8 +125,6 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
         
         if (verbosity && (i+1) % verbosity == 0) { Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;}
         if (mu_t.hasNaN() || C_t.hasNaN()) {
-            Rcpp::Rcout << "xi\n" << xi.row(i) << std::endl;
-            Rcpp::Rcout << "th\n" << th << std::endl;
             Rcpp::Rcout << "NaN found in calculation. Terminating early. Please run function again.\n";
             break;
         }

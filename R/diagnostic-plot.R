@@ -1,39 +1,3 @@
-# # # # Diagnostic check - R
-# p <- 10
-# plot.ts(ansGVA3$mu_arr[1,], main = "muFC1 R")
-# plot.ts(ansGVA3$mu_arr[2,], main = "muFC2 R")
-# variance_arr <- array(0,dim=c(p,p,T+1))
-# for (t in 1:(T+1)) {
-#     variance_arr[,,t] = ansGVA$C_arr[,,t] %*% t(ansGVA$C_arr[,,t])
-# }
-# plot.ts(variance_arr[1,1,], main = "variance 1,1 R")
-# plot.ts(variance_arr[1,2,], main = "variance 1,2 R")
-# plot.ts(variance_arr[2,2,], main = "variance 2,2 R")
-# 
-# # Diagnostic check - RcppHalf
-# plot.ts(ansGVARcppHalf3$mu_arr[1,], main = "muFC1 RcppHalf")
-# plot.ts(ansGVARcppHalf3$mu_arr[2,], main = "muFC2 RcppHalf")
-# variance_arr <- array(0,dim=c(p,p,T+1))
-# for (t in 1:(T+1)) {
-#     variance_arr[,,t] = ansGVARcppHalf2$C_arr[,,t] %*% t(ansGVARcppHalf$C_arr[,,t])
-# }
-# plot.ts(variance_arr[1,1,], main = "variance 1,1 RcppHalf")
-# plot.ts(variance_arr[1,2,], main = "variance 1,2 RcppHalf")
-# plot.ts(variance_arr[2,2,], main = "variance 2,2 RcppHalf")
-
-# Diagnostic check - RcppPure
-# for (i in 1:(p)) {
-#     plot.ts(ansGVARcppPure3$mu_arr[i,], main = sprintf("muFC%d RcppPure", i))
-# }
-# variance_arr <- array(0,dim=c(p,p,T+1))
-# for (t in 1:(T+1)) {
-#     variance_arr[,,t] = ansGVARcppPure3$C_arr[,,t] %*% t(ansGVARcppPure3$C_arr[,,t])
-# }
-# plot.ts(variance_arr[1,1,], main = "variance 1,1 RcppPure")
-# plot.ts(variance_arr[1,10,], main = "variance 1,10 RcppPure")
-# plot.ts(variance_arr[5,5,], main = "variance 5,5 RcppPure")
-
-
 #' @title Plotting mu and variance to check for convergence
 #'
 #' @param dataList Named list of data generated from \link{compute_GVA}
