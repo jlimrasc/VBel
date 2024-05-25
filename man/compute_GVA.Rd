@@ -36,7 +36,7 @@ compute_GVA(
 
 \item{lam0}{Initial guess for lambda, k x 1 matrix}
 
-\item{rho}{Scalar (0 <~ 1) ADADELTA accumulation constant}
+\item{rho}{Scalar (between 0 to 1, reccomended to be close to 1) ADADELTA accumulation constant}
 
 \item{elip}{Scalar numeric stability constant. Should be specified with a small value}
 
