@@ -74,7 +74,6 @@ Eigen::MatrixXd get_d2F_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const E
 }
 
 
-// [[Rcpp::export]]
 Eigen::MatrixXd compute_lambda_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &lam0, double a, int T, int n, int d) {
     // # -----------------------------
     // # Compute lambda using modified Newton-Raphson

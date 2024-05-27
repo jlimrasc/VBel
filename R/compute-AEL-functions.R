@@ -57,19 +57,17 @@ compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
     if (missing(returnH)){ returnH <- FALSE }
     
     if (!useR_forz) {
-        
         res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, T)
         
     } else if (useR_forz) {
-        
         p <- ncol(z)
         n <- nrow(z) + 1
         h_sum <- 0
         H_Zth <- c()
 
         for (i in 1:(n - 1)) {
-            zi <- matrix(z[i,], nrow = p) # Row of z as vertical vector
-            h_zith <- h(zi,th)
+            zi <- matrix(z[i, ], nrow = p) # Row of z as vertical vector
+            h_zith <- h(zi, th)
             
             h_sum <- h_sum + h_zith # For h(zn,th)
             H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
@@ -86,9 +84,19 @@ compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
     
     if (!returnH) {
         res$log_AEL
-    } else if(!useR_forz) {
-        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = array(unlist(res[[3]]),dim = c(1,ncol(z),nrow(z)+1)), "H" = res[[4]]))
+    } else if (!useR_forz) {
+        return(list(
+            "log_AEL" = res[[1]],
+            "lambda" = res[[2]],
+            "h_arr" = array(unlist(res[[3]]), dim = c(1, ncol(z), nrow(z) + 1)),
+            "H" = res[[4]]
+        ))
     } else {
-        return(list("log_AEL" = res[[1]], "lambda" = res[[2]], "h_arr" = array(t(H_Zth), dim = c(1, ncol(H_Zth), n)), "H" = H_Zth))
+        return(list(
+            "log_AEL" = res[[1]],
+            "lambda" = res[[2]],
+            "h_arr" = array(t(H_Zth), dim = c(1, ncol(H_Zth), n)),
+            "H" = H_Zth
+        ))
     }
 }

@@ -15,30 +15,39 @@
 diagnostic_plot <- function(dataList, muList, cList) {
     # Function to generate cList
     gen_cList <- function() {
-        if (p <= 3) { cList <- matrix(c(1,1,1,p), ncol = 2) }
-        else { cList <- matrix(c(1,p,floor(p/2), 1,floor(p/2),floor(p/2)+1), ncol = 2) }
+        if (p <= 3) {
+            cList <- matrix(c(1, 1, 1, p), ncol = 2)
+        } else {
+            cList <- matrix(c(1, p, floor(p / 2), 1, floor(p / 2), floor(p / 2) + 1), ncol = 2)
+        }
     }
     
     # Function to generate muList
     gen_muList <- function() {
-        if (p <= 3) { muList <- 1:p }
-        else { muList <- c(1,floor(p/2),p) }
+        if (p <= 3) {
+            muList <- 1:p
+        } else {
+            muList <- c(1, floor(p / 2), p)
+        }
     }
     
     # Function to check dataList structure
     check_strutcture <- function(dataList) {
-        return(c("mu_FC","mu_arr","C_arr") %in% names(dataList))
+        return(c("mu_FC", "mu_arr", "C_arr") %in% names(dataList))
     }
-
+    
     # Validate inputs
     if (!is.list(dataList)) {
         try(stop("List not provided", call. = FALSE))
         return()
     } else if (!all(check_strutcture(dataList))) {
-        try(stop("List structure incorrect. Requires \"mu_FC\", \"mu_arr\", \"C_FC\" and \"C_arr\"", call. = FALSE))
+        try(stop(
+            "List structure incorrect. Requires \"mu_FC\", \"mu_arr\", \"C_FC\" and \"C_arr\"",
+            call. = FALSE
+        ))
         return()
     }
-
+    
     # Initialise variables and presets
     p <- length(dataList$mu_FC)         # Resolution of data
     T <- length(dataList$mu_arr) / p    # Number of iterations
@@ -59,25 +68,31 @@ diagnostic_plot <- function(dataList, muList, cList) {
         warning("cList wrong dimensions - requires 2 columns. Using default cList.")
         cList <- gen_cList()
     }
-
+    
     # Calculate variances
-    variance_arr <- array(0,dim=c(p,p,T))
+    variance_arr <- array(0, dim = c(p, p, T))
     for (t in 1:(T)) {
-        variance_arr[,,t] = dataList$C_arr[,,t] %*% t(dataList$C_arr[,,t])
+        variance_arr[, , t] = dataList$C_arr[, , t] %*% t(dataList$C_arr[, , t])
     }
     
     # Plot mu
     for (i in muList) {
-        stats::plot.ts(dataList$mu_arr[i,],
-                main = sprintf("muFC %d", i),
-                xlab = "Iterations", ylab = sprintf("mu_arr[%d,]",i))
+        stats::plot.ts(
+            dataList$mu_arr[i, ],
+            main = sprintf("muFC %d", i),
+            xlab = "Iterations",
+            ylab = sprintf("mu_arr[%d,]", i)
+        )
     }
     
     # Plot C
     for (i in 1:nrow(cList)) {
-        stats::plot.ts(variance_arr[cList[i,1],cList[i,2],], 
-                main = sprintf("Variance %d,%d",cList[i,1],cList[i,2]),
-                xlab = "Iterations", ylab = sprintf("Variance[%d,%d,]",cList[i,1],cList[i,2]))
+        stats::plot.ts(
+            variance_arr[cList[i, 1], cList[i, 2], ],
+            main = sprintf("Variance %d,%d", cList[i, 1], cList[i, 2]),
+            xlab = "Iterations",
+            ylab = sprintf("Variance[%d,%d,]", cList[i, 1], cList[i, 2])
+        )
     }
     
     return(variance_arr)

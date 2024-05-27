@@ -1,5 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 #include <RcppEigen.h>
+#include <Eigen/Dense>
 // [[Rcpp::depends(RcppEigen)]]
 #include <stdio.h>
 #include <iostream>

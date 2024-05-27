@@ -172,7 +172,7 @@ compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z,
     res <- compute_AEL(theta, h, lam0, a, z, T2, returnH = TRUE) # list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     lambda <- res$"lambda"
     h_arr <- res$"h_arr"
-    hznth <- h_arr[,,n]
+    hznth <- h_arr[, , n]
     
     # Calculate gradient LogAEL with respect to theta
     nabth_logAEL <- 0 # Matrix
