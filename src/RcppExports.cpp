@@ -12,14 +12,14 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // compute_lambda_Rcpp
-Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, double a, int T, int n, int d);
+Eigen::MatrixXd compute_lambda_Rcpp(const std::vector<Eigen::VectorXd>& h_list, const Eigen::MatrixXd& H_Zth, const Eigen::VectorXd& lam0, double a, int T, int n, int d);
 RcppExport SEXP _VBel_compute_lambda_Rcpp(SEXP h_listSEXP, SEXP H_ZthSEXP, SEXP lam0SEXP, SEXP aSEXP, SEXP TSEXP, SEXP nSEXP, SEXP dSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<Eigen::VectorXd> >::type h_list(h_listSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type H_Zth(H_ZthSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type lam0(lam0SEXP);
+    Rcpp::traits::input_parameter< const std::vector<Eigen::VectorXd>& >::type h_list(h_listSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type H_Zth(H_ZthSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type lam0(lam0SEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< int >::type T(TSEXP);
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
@@ -28,9 +28,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_AEL_Rcpp_inner
-Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h, Eigen::VectorXd lam0, double a, Eigen::MatrixXd z, int T);
-RcppExport SEXP _VBel_compute_AEL_Rcpp_inner(SEXP thSEXP, SEXP hSEXP, SEXP lam0SEXP, SEXP aSEXP, SEXP zSEXP, SEXP TSEXP) {
+// compute_AEL_Rcpp_inner_wrap
+Rcpp::List compute_AEL_Rcpp_inner_wrap(Eigen::VectorXd th, Rcpp::Function h, Eigen::VectorXd lam0, double a, Eigen::MatrixXd z, int T);
+RcppExport SEXP _VBel_compute_AEL_Rcpp_inner_wrap(SEXP thSEXP, SEXP hSEXP, SEXP lam0SEXP, SEXP aSEXP, SEXP zSEXP, SEXP TSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,7 +40,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type z(zSEXP);
     Rcpp::traits::input_parameter< int >::type T(TSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_AEL_Rcpp_inner(th, h, lam0, a, z, T));
+    rcpp_result_gen = Rcpp::wrap(compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, T));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -110,7 +110,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_VBel_compute_lambda_Rcpp", (DL_FUNC) &_VBel_compute_lambda_Rcpp, 7},
-    {"_VBel_compute_AEL_Rcpp_inner", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner, 6},
+    {"_VBel_compute_AEL_Rcpp_inner_wrap", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner_wrap, 6},
     {"_VBel_compute_AEL_Rcpp_inner_prez", (DL_FUNC) &_VBel_compute_AEL_Rcpp_inner_prez, 6},
     {"_VBel_compute_GVA_Rcpp_inner_IVtoXII", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_IVtoXII, 13},
     {"_VBel_compute_GVA_Rcpp_inner_full", (DL_FUNC) &_VBel_compute_GVA_Rcpp_inner_full, 14},

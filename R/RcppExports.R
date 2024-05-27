@@ -5,8 +5,8 @@ compute_lambda_Rcpp <- function(h_list, H_Zth, lam0, a, T, n, d) {
     .Call(`_VBel_compute_lambda_Rcpp`, h_list, H_Zth, lam0, a, T, n, d)
 }
 
-compute_AEL_Rcpp_inner <- function(th, h, lam0, a, z, T = 500L) {
-    .Call(`_VBel_compute_AEL_Rcpp_inner`, th, h, lam0, a, z, T)
+compute_AEL_Rcpp_inner_wrap <- function(th, h, lam0, a, z, T = 500L) {
+    .Call(`_VBel_compute_AEL_Rcpp_inner_wrap`, th, h, lam0, a, z, T)
 }
 
 compute_AEL_Rcpp_inner_prez <- function(th, H_Zth, lam0, a, z, T = 500L) {

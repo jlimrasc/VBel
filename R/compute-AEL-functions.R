@@ -58,7 +58,7 @@ compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
     
     if (!useR_forz) {
         
-        res <- compute_AEL_Rcpp_inner(th, h, lam0, a, z, T)
+        res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, T)
         
     } else if (useR_forz) {
         

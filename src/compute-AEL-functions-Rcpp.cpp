@@ -3,12 +3,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <stdio.h>
 #include <cmath>
-using Eigen::MatrixXd;      // variable size martix, double precision
-using Eigen::VectorXd;      // variable size martix, double precision
-using Eigen::DiagonalMatrix;// diagonal matrix
-using namespace std;
-using namespace Rcpp;
-using namespace RcppEigen;
 
 // This is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp 
@@ -21,9 +15,9 @@ using namespace RcppEigen;
 //
 
 // Functions
-Eigen::VectorXd get_wi_arr_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::VectorXd tild_lam, int n) {
+Eigen::VectorXd get_wi_arr_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::VectorXd &tild_lam, int n) {
     // Store wi for use in D in P
-    VectorXd wi_arr(n);
+    Eigen::VectorXd wi_arr(n);
     for (int i = 0; i < n; i++) {
         wi_arr(i) = pow((1 + tild_lam.transpose() * h_list[i]),-1);
     }
@@ -33,15 +27,15 @@ Eigen::VectorXd get_wi_arr_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::Vect
 // -----------------------------
 // Compute dF
 // -----------------------------
-Eigen::VectorXd get_dF_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::VectorXd wi_arr, int n, int d) {
+Eigen::VectorXd get_dF_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::VectorXd &wi_arr, int n, int d) {
     // #' @param wi_arr Array of vectors of wi(th, lam~)
     double wi, vi;
-    VectorXd dF = VectorXd::Zero(d);
+    Eigen::VectorXd dF = Eigen::VectorXd::Zero(d);
     
     for (int i = 0; i < n; i++) {
         
         // Evaluate vi
-        wi = wi_arr[i];
+        wi = wi_arr(i);
         if (pow(wi,-1) >= 1.0/(double)n) {
             vi = wi;
         } else {
@@ -55,7 +49,7 @@ Eigen::VectorXd get_dF_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::VectorXd
 // -----------------------------
 // Compute d2F
 // -----------------------------
-Eigen::MatrixXd get_d2F_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixXd H_Zth, Eigen::VectorXd wi_arr, int n, int d) {
+Eigen::MatrixXd get_d2F_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &wi_arr, int n, int d) {
     // Build diagonal matrix
     // Diagonal matrix changes with respect to lambda's current guess so need 
     // to recompute each iteration
@@ -81,13 +75,13 @@ Eigen::MatrixXd get_d2F_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixX
 
 
 // [[Rcpp::export]]
-Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, double a, int T, int n, int d) {
+Eigen::MatrixXd compute_lambda_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &lam0, double a, int T, int n, int d) {
     // # -----------------------------
     // # Compute lambda using modified Newton-Raphson
     // # -----------------------------
-    VectorXd lam_prev = lam0;
-    VectorXd wi_arr(n), dF(d);
-    MatrixXd P(d,d);
+    Eigen::VectorXd lam_prev = lam0;
+    Eigen::VectorXd wi_arr(n), dF(d);
+    Eigen::MatrixXd P(d,d);
     
     for (int i = 0; i < T; i++) {
         
@@ -105,13 +99,13 @@ Eigen::MatrixXd compute_lambda_Rcpp(std::vector<Eigen::VectorXd> h_list, Eigen::
     return lam_prev;
 }
 
-Rcpp::List compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list, 
-                                   Eigen::MatrixXd H_Zth, Eigen::VectorXd lam0, 
+Rcpp::List compute_AEL_Rcpp_inner_main(const std::vector<Eigen::VectorXd> &h_list, 
+                                   const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &lam0, 
                                    double a, int T, int n, int d) {
     // -----------------------------
     // Lambda Calculation
     // -----------------------------
-    MatrixXd lambda = compute_lambda_Rcpp(h_list, H_Zth, lam0, a, T, n, d);
+    Eigen::MatrixXd lambda = compute_lambda_Rcpp(h_list, H_Zth, lam0, a, T, n, d);
     
     // -----------------------------
     // AEL Calculation
@@ -130,22 +124,21 @@ Rcpp::List compute_AEL_Rcpp_inner_main(std::vector<Eigen::VectorXd> h_list,
     
 }
 
-// [[Rcpp::export]]
-Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h, 
-                              Eigen::VectorXd lam0, double a, Eigen::MatrixXd z,
+Rcpp::List compute_AEL_Rcpp_inner(const Eigen::VectorXd &th, Rcpp::Function h, 
+                              const Eigen::VectorXd &lam0, double a, const Eigen::MatrixXd &z,
                               int T = 500) {
     // # -----------------------------
     // # Starting variables (h(zi,th), h(zn,th), H)
     // # -----------------------------
     int n = z.rows() + 1;
     int d = z.cols();
-    vector<VectorXd> h_list(n);
-    MatrixXd H_Zth = MatrixXd::Zero(n,d);
-    MatrixXd h_znth(1, d);
-    VectorXd h_zith(d);
+    std::vector<Eigen::VectorXd> h_list(n);
+    Eigen::MatrixXd H_Zth = Eigen::MatrixXd::Zero(n,d);
+    Eigen::MatrixXd h_znth(1, d);
+    Eigen::VectorXd h_zith(d);
     
     for (int i = 0; i < n - 1; i++) {
-        h_zith = Rcpp::as<VectorXd>(h(z.row(i).transpose(), th)); // Costly to call R functions
+        h_zith = Rcpp::as<Eigen::VectorXd>(h(z.row(i).transpose(), th)); // Costly to call R functions
 
         h_list[i] = h_zith;
         
@@ -161,8 +154,15 @@ Rcpp::List compute_AEL_Rcpp_inner(Eigen::VectorXd th, Rcpp::Function h,
     Rcpp::List res = compute_AEL_Rcpp_inner_main(h_list, H_Zth, lam0, a, T, n, d);
     res.push_back(h_list, "h_arr");
     res.push_back(H_Zth, "H_Zth");
-    MatrixXd lam = res["lambda"];
+    Eigen::MatrixXd lam = res["lambda"];
     return res;
+}
+
+// [[Rcpp::export]]
+Rcpp::List compute_AEL_Rcpp_inner_wrap(Eigen::VectorXd th, Rcpp::Function h, 
+                                       Eigen::VectorXd lam0, double a, Eigen::MatrixXd z,
+                                       int T = 500) {
+    return compute_AEL_Rcpp_inner(th, h, lam0, a, z, T);
 }
 
 // [[Rcpp::export]]
@@ -174,7 +174,7 @@ Rcpp::List compute_AEL_Rcpp_inner_prez(Eigen::VectorXd th, Eigen::MatrixXd H_Zth
     // Calculate h_list for simpler calculations later
     int n = z.rows() + 1;
     int d = z.cols();
-    vector<VectorXd> h_list(n);
+    std::vector<Eigen::VectorXd> h_list(n);
     
     for (int i = 0; i < n; i++) {
         h_list[i] = H_Zth.row(i).transpose();

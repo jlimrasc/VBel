@@ -6,8 +6,6 @@
 #include <cmath>
 #include <random>
 #include "compute-AEL-functions-Rcpp.h"
-using namespace Rcpp;
-using namespace RcppEigen;
 
 // This is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp 
@@ -20,7 +18,7 @@ using namespace RcppEigen;
 //
 
 // Functions
-Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, Eigen::MatrixXd C_t) {
+Eigen::MatrixXd compute_nabC_ELBO_Rcpp(const Eigen::VectorXd &gmu, const Eigen::VectorXd &xi, const Eigen::MatrixXd &C_t) {
     // Store wi for use in D in P
     Eigen::MatrixXd nabC_ELBO;
     nabC_ELBO = gmu * xi.transpose() + C_t.diagonal().cwiseInverse().asDiagonal().toDenseMatrix(); // .row changes it to a row vector rather than column but VectorXd makes it a column again so transpose
@@ -28,8 +26,8 @@ Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, 
 }
 
 Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Function delthh, 
-                                        Eigen::VectorXd theta, Rcpp::Function h, 
-                                        Eigen::VectorXd lam0, Eigen::MatrixXd z, 
+                                        const Eigen::VectorXd &theta, Rcpp::Function h, 
+                                        const Eigen::VectorXd &lam0, const Eigen::MatrixXd &z, 
                                         int n, double a, int p, int T2, int i_out) {
     Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     Eigen::MatrixXd lambda              = res["lambda"];
@@ -131,17 +129,17 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     }
     
     Rcpp::List res = Rcpp::List::create(
-        _["mu_FC"]   = mu_t,
-        _["C_FC"]    = C_t,
-        _["mu_arr"] = mu_arr,
-        _["C_arr"]  = C_arr,
-        _["gmu"]    = gmu,
-        _["Egmu"]   = Egmu,
-        _["delmu"]  = delmu, 
-        _["Edelmu"] = Edelmu, 
-        _["gC_t"]   = gC_t, 
-        _["EgC"]    = EgC, 
-        _["delC"]   = delC
+        Rcpp::_["mu_FC"]   = mu_t,
+        Rcpp::_["C_FC"]    = C_t,
+        Rcpp::_["mu_arr"] = mu_arr,
+        Rcpp::_["C_arr"]  = C_arr,
+        Rcpp::_["gmu"]    = gmu,
+        Rcpp::_["Egmu"]   = Egmu,
+        Rcpp::_["delmu"]  = delmu, 
+        Rcpp::_["Edelmu"] = Edelmu, 
+        Rcpp::_["gC_t"]   = gC_t, 
+        Rcpp::_["EgC"]    = EgC, 
+        Rcpp::_["delC"]   = delC
     );
     return res;
 }
