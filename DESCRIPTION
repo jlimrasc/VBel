@@ -4,7 +4,8 @@ Title: Variational Bayes for Fast and Accurate Empirical Likelihood Inference
 Version: 1.0
 Date: 2024-05-25
 Authors@R: c(
-    person("Wei-Chang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut")),
+    person("Wei-Chang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut"),
+    comment = c(ORCID = "0000-0002-0399-3779")),
     person("Jeremy", "Lim", , "jeremy.lim@unimelb.edu.au", role = c("cre", "aut"))
   )
 Description: Functions for computing the Gaussian Variational Approximation of
@@ -14,7 +15,6 @@ Description: Functions for computing the Gaussian Variational Approximation of
 License: GPL (>= 3)
 Imports: 
     Rcpp (>= 1.0.12),
-    RcppEigen,
     stats
 LinkingTo: Rcpp, RcppEigen
 Encoding: UTF-8

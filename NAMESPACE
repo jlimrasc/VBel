@@ -3,6 +3,5 @@
 export(compute_AEL)
 export(compute_GVA)
 export(diagnostic_plot)
-import(RcppEigen)
 importFrom(Rcpp,sourceCpp)
 useDynLib(VBel, .registration = TRUE)
