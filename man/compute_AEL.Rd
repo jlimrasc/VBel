@@ -57,7 +57,7 @@ ansAELRcpp <- compute_AEL(th, h, lam0, a, z, T, useR_forz = TRUE)
 \references{
 Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and
 Accurate Empirical Likelihood Inference. Journal of the American Statistical
-Association, 1–13. \url{https://doi.org/10.1080/01621459.2023.2169701}
+Association, 1–13. \doi{doi:10.1080/01621459.2023.2169701}
 }
 \author{
 Wei Chang Yu, Jeremy Lim
