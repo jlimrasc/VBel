@@ -44,7 +44,6 @@ test_that("GVA outputs right length, 10x10", {
     # -----------------------------
     # Main
     # -----------------------------
-    options(digits = 20)
     set.seed(seedNum)
     ansGVARcppHalf <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
     ansGVARcppPure <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)

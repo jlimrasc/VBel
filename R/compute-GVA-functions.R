@@ -73,7 +73,6 @@
 #' # -----------------------------
 #' # Main
 #' # -----------------------------
-#' options(digits = 20)
 #' set.seed(1)
 #' ansGVARcppHalf <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
 #' rho, elip, a, T, T2, fullCpp = FALSE)
