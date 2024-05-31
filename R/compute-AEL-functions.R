@@ -7,7 +7,7 @@
 #' @param lam0      Initial vector for lambda
 #' @param a         Scalar constant
 #' @param z         n-1 by d matrix
-#' @param T         Number of iterations using Newton-Raphson for estimation of lambda (default: 500)
+#' @param iters     Number of iterations using Newton-Raphson for estimation of lambda (default: 500)
 #' @param useR_forz Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)
 #' @param returnH   Whether to return calculated values of h, H matrix and lambda
 #'
@@ -26,36 +26,36 @@
 #' @examples
 #' # Generate toy variables
 #' set.seed(1)
-#' x    <- runif(30, min = -5, max = 5)
-#' elip <- rnorm(30, mean = 0, sd = 1)
-#' y    <- 0.75 - x + elip
+#' x     <- runif(30, min = -5, max = 5)
+#' elip  <- rnorm(30, mean = 0, sd = 1)
+#' y     <- 0.75 - x + elip
 #' 
 #' # Set initial values for AEL computation
-#' lam0 <- matrix(c(0,0), nrow = 2)
-#' th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-#' a    <- 0.00001
-#' T    <- 10
+#' lam0  <- matrix(c(0,0), nrow = 2)
+#' th    <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' a     <- 0.00001
+#' iters <- 10
 #' 
 #' # Define Dataset and h-function
-#' z    <- cbind(x, y)
-#' h    <- function(z, th) {
-#'     xi <- z[1]
-#'     yi <- z[2]
-#'     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
+#' z <- cbind(x, y)
+#' h <- function(z, th) {
+#'     xi      <- z[1]
+#'     yi      <- z[2]
+#'     h_zith  <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
 #'     matrix(h_zith, nrow = 2)
 #' }
-#' ansAELRcpp <- compute_AEL(th, h, lam0, a, z, T, useR_forz = TRUE)
-compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
+#' ansAELRcpp <- compute_AEL(th, h, lam0, a, z, iters, useR_forz = TRUE)
+compute_AEL <- function(th, h, lam0, a, z, iters, useR_forz, returnH) {
     
     # -----------------------------
     # Default values
     # -----------------------------
-    if (missing(T)) { T <- 500 }
+    if (missing(iters)) { iters <- 500 }
     if (missing(useR_forz)){ useR_forz <- TRUE }
     if (missing(returnH)){ returnH <- FALSE }
     
     if (!useR_forz) {
-        res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, T)
+        res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, iters)
         
     } else if (useR_forz) {
         p <- ncol(z)
@@ -73,7 +73,7 @@ compute_AEL <- function(th, h, lam0, a, z, T, useR_forz, returnH) {
         
         h_znth <- -a / (n - 1) * h_sum
         H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
-        res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, T)
+        res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
         
     } else {
         warning("Error: Incorrect input for useR_forz")

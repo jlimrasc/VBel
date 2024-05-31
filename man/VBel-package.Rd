@@ -13,7 +13,6 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{VBel}
 \packageIndices{VBel}
-Define required data i.e.
 }
 \author{
 \packageAuthor{VBel}
@@ -28,9 +27,13 @@ Maintainer: \packageMaintainer{VBel}
 \code{\link[=compute_AEL]{compute_AEL()}} for choice of R and/or C++ computation of AEL
 
 \code{\link[=compute_GVA]{compute_GVA()}} for choice of R and/or C++ computation of GVA
+
+\code{\link[=diagnostic_plot]{diagnostic_plot()}} for verifying convergence of computed GVA data
+
 }
 \examples{
 
-#ansGVARcppPure <- compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
-#rho, elip, a, T, T2, fullCpp = TRUE)
+#ansGVARcppPure <- compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, 
+#elip, a, iters, iters2, fullCpp = TRUE)
+#diagnostic_plot(ansGVARcppPure)
 }
