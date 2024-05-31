@@ -26,8 +26,8 @@ test_that("AEL outputs right output", {
     # -----------------------------
     # Main
     # -----------------------------
-    ansAELRcppprez  <- compute_AEL(th, h, lam0, a, z, useR_forz = FALSE)
-    ansAELRcpp      <- compute_AEL(th, h, lam0, a, z, useR_forz = TRUE)
+    ansAELRcppprez  <- compute_AEL(th, h, lam0, a, z, useR_forz = TRUE)
+    ansAELRcpp      <- compute_AEL(th, h, lam0, a, z, useR_forz = FALSE)
     
     expect_length(ansAELRcppprez, 1)
     expect_length(ansAELRcpp, 1)

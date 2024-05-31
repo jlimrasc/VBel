@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagnostic-plot.R
 \name{diagnostic_plot}
 \alias{diagnostic_plot}
-\title{Plotting mu and variance to check for convergence}
+\title{Check the convergence of a data set computed by \code{compute_GVA}}
 \usage{
 diagnostic_plot(dataList, muList, cList)
 }
@@ -11,17 +11,61 @@ diagnostic_plot(dataList, muList, cList)
 
 \item{muList}{Array of indices of mu_arr to plot. (default:all)}
 
-\item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is (col,row) of variance matrix}
+\item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is
+(col,row) of variance matrix}
 }
 \value{
 Matrix of variance of C_FC
 }
 \description{
-Plotting mu and variance to check for convergence
+Plots mu and variance in a time series plot to check for convergence of the
+computed data (i.e. Full-Covariance Gaussian VB Empirical Likelihood
+Posterior)
 }
 \examples{
-\dontrun{
+# Generate toy variables
+seedNum <- 100
+set.seed(seedNum)
+n       <- 100
+p       <- 10
+lam0    <- matrix(0, nrow = p)
+
+# Calculate z
+mean    <- rep(1, p)
+sigStar <- matrix(0.4, p, p) + diag(0.6, p)
+z       <- mvtnorm::rmvnorm(n = n-1, mean = mean, sigma = sigStar)
+
+# Calculate intermediate variables
+zbar    <- 1/(n-1) * matrix(colSums(z), nrow = p)
+sumVal  <- matrix(0, nrow = p, ncol = p)
+for (i in 1:p) {
+zi      <- matrix(z[i,], nrow = p)
+sumVal  <- sumVal + (zi - zbar) \%*\% matrix(zi - zbar, ncol = p)
+}
+sigHat  <- 1/(n-2) * sumVal
+
+# Initial values for GVA
+mu_0    <- matrix(zbar, p, 1)
+C_0     <- 1/sqrt(n) * t(chol(sigHat))
+
+# Define h-function
+h       <- function(zi, th) { matrix(zi - th, nrow = 10) }
+
+# Define h-gradient function
+delthh  <- function(z, th) { -diag(p) }
+
+# Set other initial values
+delth_logpi <- function(theta) {-0.0001 * theta}
+elip    <- 10^-5
+T       <- 5 # Number of iterations for GVA
+T2      <- 5 # Number of iterations for AEL
+rho     <- 0.9
+a       <- 0.00001
+
+ansGVA <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, 
+a, T, T2, fullCpp = TRUE)
+
 diagnostic_plot(ansGVA)
 diagnostic_plot(ansGVA, muList = c(1,4))
-diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2))}
+diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2))
 }

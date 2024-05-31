@@ -1,13 +1,12 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 #include <RcppEigen.h>
+#include <Eigen/Dense>
 // [[Rcpp::depends(RcppEigen)]]
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
 #include <random>
 #include "compute-AEL-functions-Rcpp.h"
-using namespace Rcpp;
-using namespace RcppEigen;
 
 // This is a simple example of exporting a C++ function to R. You can
 // source this function into an R session using the Rcpp::sourceCpp 
@@ -20,7 +19,7 @@ using namespace RcppEigen;
 //
 
 // Functions
-Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, Eigen::MatrixXd C_t) {
+Eigen::MatrixXd compute_nabC_ELBO_Rcpp(const Eigen::VectorXd &gmu, const Eigen::VectorXd &xi, const Eigen::MatrixXd &C_t) {
     // Store wi for use in D in P
     Eigen::MatrixXd nabC_ELBO;
     nabC_ELBO = gmu * xi.transpose() + C_t.diagonal().cwiseInverse().asDiagonal().toDenseMatrix(); // .row changes it to a row vector rather than column but VectorXd makes it a column again so transpose
@@ -28,15 +27,15 @@ Eigen::MatrixXd compute_nabC_ELBO_Rcpp(Eigen::VectorXd gmu, Eigen::VectorXd xi, 
 }
 
 Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Function delthh, 
-                                        Eigen::VectorXd theta, Rcpp::Function h, 
-                                        Eigen::VectorXd lam0, Eigen::MatrixXd z, 
+                                        const Eigen::VectorXd &theta, Rcpp::Function h, 
+                                        const Eigen::VectorXd &lam0, const Eigen::MatrixXd &z, 
                                         int n, double a, int p, int T2, int i_out) {
     Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     Eigen::MatrixXd lambda              = res["lambda"];
     std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
     Eigen::VectorXd hznth               = h_arr[n-1];
     if (lambda.hasNaN()) {
-        Rcpp::Rcout << "Lamabda Iteration: " << i_out << " has NaN:\n" << lambda << std::endl;
+        Rcpp::Rcout << "\nLambda Iteration: " << i_out << " has NaN:\n" << lambda << std::endl;
     }
     
 
@@ -45,10 +44,6 @@ Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Functi
     Eigen::MatrixXd delthh_zith;
     for (int i = 0; i < n-1; i++) {
         nabth_logAEL = nabth_logAEL - ((1/(1 + (lambda.transpose() * h_arr[i]).array()) - (a/(n-1)) / (1 + (lambda.transpose() * hznth).array()))(0,0) * (Rcpp::as<Eigen::MatrixXd>(delthh(z.row(i).transpose(),theta)).transpose() * lambda).array()).matrix();
-        if (h_arr[i].hasNaN()) {
-            Rcpp::Rcout << "h_arr[" << i << "] Iteration: " << i_out << "has NaN\n" << h_arr[i] << std::endl;
-            break;
-        }
     }
     
     Eigen::VectorXd nabmu_ELBO = (nabth_logAEL.array() + Rcpp::as<Eigen::VectorXd>(delth_logpi(theta)).array()).matrix();
@@ -98,12 +93,12 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     
     // Set up for normal distribution
     // From: https://eigen.tuxfamily.org/dox/classEigen_1_1DenseBase.html#a3340c9b997f5b53a0131cf927f93b54c
-    std::default_random_engine generator;
+    std::default_random_engine generator{ static_cast<unsigned int>(time(0)) };
     std::normal_distribution<double> distribution(0,1);
     auto normal_dist = [&] (double) {return distribution(generator);};
 
     Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
-
+    
     for (int i = 0; i < T; i++) {
         Eigen::VectorXd th = mu_t + C_t * xi.row(i).transpose();                           // II   - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
@@ -135,17 +130,17 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     }
     
     Rcpp::List res = Rcpp::List::create(
-        _["mu_FC"]   = mu_t,
-        _["C_FC"]    = C_t,
-        _["mu_arr"] = mu_arr,
-        _["C_arr"]  = C_arr,
-        _["gmu"]    = gmu,
-        _["Egmu"]   = Egmu,
-        _["delmu"]  = delmu, 
-        _["Edelmu"] = Edelmu, 
-        _["gC_t"]   = gC_t, 
-        _["EgC"]    = EgC, 
-        _["delC"]   = delC
+        Rcpp::_["mu_FC"]   = mu_t,
+        Rcpp::_["C_FC"]    = C_t,
+        Rcpp::_["mu_arr"] = mu_arr,
+        Rcpp::_["C_arr"]  = C_arr,
+        Rcpp::_["gmu"]    = gmu,
+        Rcpp::_["Egmu"]   = Egmu,
+        Rcpp::_["delmu"]  = delmu, 
+        Rcpp::_["Edelmu"] = Edelmu, 
+        Rcpp::_["gC_t"]   = gC_t, 
+        Rcpp::_["EgC"]    = EgC, 
+        Rcpp::_["delC"]   = delC
     );
     return res;
 }

@@ -4,11 +4,11 @@ Variational Bayes for fast and accurate empirical likelihood inference
 
 # About this package
 
-This package allows you to run GVA on a data set in R, and C++ can be used for faster computation 
-(22.5 mins (1350.71s) for R, 40.23s for partial Rcpp and 28.5s for pure Rcpp computation for 10,000 iterations of GVA).
+This package allows you to run GVA on a data set in R and C++ for faster computation 
+(for 10,000 iterations of GVA: 40.23s for partial R and cpp and 28.5s for purely cpp computation).
 
-This package also allows you to run AEL on a data set in R, and C++ can be used for faster computation 
-(1s for R, 0.2s for Rcpp and 0.1s for Rcpp with pre-z calculation for 500 iterations of AEL).
+This package also allows you to run AEL on a data set in R and C++ for faster computation 
+(for 500 iterations of AEL: 0.2s for purely cpp and 0.1s for R and cpp with pre-z calculation).
 
 * * *
 
@@ -104,8 +104,9 @@ T <- 10 # Number of iterations for GVA
 T2 <- 500 # Number of iterations for AEL
 
 # Excecute functions
-ansAELRcpp <- compute_AEL_Rcpp(th, h, lam0, a, z, T2)
-ansGVARcppPure <-compute_GVA_Rcpp(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+ansAELRcpp <- compute_AEL(th, h, lam0, a, z, T2)
+ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+diagnostic_plot(ansGVARcppPure) # Plot the results to check for convergence
 ```
 
 * * *
