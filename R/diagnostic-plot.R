@@ -14,17 +14,60 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' # Generate toy variables
+#' seedNum <- 100
+#' set.seed(seedNum)
+#' n       <- 100
+#' p       <- 10
+#' lam0    <- matrix(0, nrow = p)
+#' 
+#' # Calculate z
+#' mean    <- rep(1, p)
+#' sigStar <- matrix(0.4, p, p) + diag(0.6, p)
+#' z       <- mvtnorm::rmvnorm(n = n-1, mean = mean, sigma = sigStar)
+#' 
+#' # Calculate intermediate variables
+#' zbar    <- 1/(n-1) * matrix(colSums(z), nrow = p)
+#' sumVal  <- matrix(0, nrow = p, ncol = p)
+#' for (i in 1:p) {
+#' zi      <- matrix(z[i,], nrow = p)
+#' sumVal  <- sumVal + (zi - zbar) %*% matrix(zi - zbar, ncol = p)
+#' }
+#' sigHat  <- 1/(n-2) * sumVal
+#' 
+#' # Initial values for GVA
+#' mu_0    <- matrix(zbar, p, 1)
+#' C_0     <- 1/sqrt(n) * t(chol(sigHat))
+#' 
+#' # Define h-function
+#' h       <- function(zi, th) { matrix(zi - th, nrow = 10) }
+#' 
+#' # Define h-gradient function
+#' delthh  <- function(z, th) { -diag(p) }
+#' 
+#' # Set other initial values
+#' delth_logpi <- function(theta) {-0.0001 * theta}
+#' elip    <- 10^-5
+#' T       <- 5 # Number of iterations for GVA
+#' T2      <- 5 # Number of iterations for AEL
+#' rho     <- 0.9
+#' a       <- 0.00001
+#' 
+#' ansGVA <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, 
+#' a, T, T2, fullCpp = TRUE)
+#' 
 #' diagnostic_plot(ansGVA)
 #' diagnostic_plot(ansGVA, muList = c(1,4))
-#' diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2))}
+#' diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2))
 diagnostic_plot <- function(dataList, muList, cList) {
     # Function to generate cList
     gen_cList <- function() {
         if (p <= 3) {
             cList <- matrix(c(1, 1, 1, p), ncol = 2)
         } else {
-            cList <- matrix(c(1, p, floor(p / 2), 1, floor(p / 2), floor(p / 2) + 1), ncol = 2)
+            cList <- matrix(c(1, p, floor(p / 2), 
+                              1, floor(p / 2), floor(p / 2) + 1), 
+                            ncol = 2)
         }
     }
     
