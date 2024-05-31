@@ -1,7 +1,8 @@
-#' @title Full-Covariance Gaussian VB Empirical Likelihood Posterior
+#' Compute the Full-Covariance Gaussian VB Empirical Likelihood Posterior
 #' 
-#' @description
-#' Function for computing the Full-Covariance Gaussian VB Empirical Likelihood Posterior
+#' Requires a given data set, moment conditions and parameter values and returns
+#' a list of the final mean and variance-covariance along with an array of the 
+#' in-between calculations at each iteration for analysis of convergence
 #' 
 #'
 #' @param mu            Column vector, initial value of Gaussian VB mean

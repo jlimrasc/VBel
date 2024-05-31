@@ -1,8 +1,14 @@
-#' @title Plotting mu and variance to check for convergence
+#' Check the convergence of a data set computed by `compute_GVA`
+#' 
+#' Plots mu and variance in a time series plot to check for convergence of the 
+#' computed data (i.e. Full-Covariance Gaussian VB Empirical Likelihood 
+#' Posterior)
+#' 
 #'
 #' @param dataList Named list of data generated from \link{compute_GVA}
 #' @param muList Array of indices of mu_arr to plot. (default:all)
-#' @param cList Matrix of indices of variance to plot, 2xn matrix, each row is (col,row) of variance matrix
+#' @param cList Matrix of indices of variance to plot, 2xn matrix, each row is 
+#' (col,row) of variance matrix
 #'
 #' @return Matrix of variance of C_FC
 #' @export

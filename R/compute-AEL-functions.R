@@ -1,8 +1,6 @@
-#' @title Adjusted Empirical Likelihood
+#' Compute the Adjusted Empirical Likelihood
 #' 
-#' @description 
-#' Function for evaluating the Adjusted Empirical Likelihood for a given 
-#' data set, moment conditions and parameter values
+#' Evaluates the AEL for a given data set, moment conditions and parameter values
 #' 
 #' @param th        Vector or scalar theta
 #' @param h         User-defined function, outputs array

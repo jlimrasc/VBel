@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-GVA-functions.R
 \name{compute_GVA}
 \alias{compute_GVA}
-\title{Full-Covariance Gaussian VB Empirical Likelihood Posterior}
+\title{Compute the Full-Covariance Gaussian VB Empirical Likelihood Posterior}
 \usage{
 compute_GVA(
   mu,
@@ -63,7 +63,9 @@ each iteration. An array of size p x p x T
 }
 }
 \description{
-Function for computing the Full-Covariance Gaussian VB Empirical Likelihood Posterior
+Requires a given data set, moment conditions and parameter values and returns
+a list of the final mean and variance-covariance along with an array of the
+in-between calculations at each iteration for analysis of convergence
 }
 \examples{
 set.seed(1)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute-AEL-functions.R
 \name{compute_AEL}
 \alias{compute_AEL}
-\title{Adjusted Empirical Likelihood}
+\title{Compute the Adjusted Empirical Likelihood}
 \usage{
 compute_AEL(th, h, lam0, a, z, T, useR_forz, returnH)
 }
@@ -28,8 +28,7 @@ A numeric value for the Adjusted Empirical Likelihood function
 computed evaluated at a given theta value
 }
 \description{
-Function for evaluating the Adjusted Empirical Likelihood for a given
-data set, moment conditions and parameter values
+Evaluates the AEL for a given data set, moment conditions and parameter values
 }
 \examples{
 # Generate toy variables

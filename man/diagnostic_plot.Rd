@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagnostic-plot.R
 \name{diagnostic_plot}
 \alias{diagnostic_plot}
-\title{Plotting mu and variance to check for convergence}
+\title{Check the convergence of a data set computed by \code{compute_GVA}}
 \usage{
 diagnostic_plot(dataList, muList, cList)
 }
@@ -11,13 +11,16 @@ diagnostic_plot(dataList, muList, cList)
 
 \item{muList}{Array of indices of mu_arr to plot. (default:all)}
 
-\item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is (col,row) of variance matrix}
+\item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is
+(col,row) of variance matrix}
 }
 \value{
 Matrix of variance of C_FC
 }
 \description{
-Plotting mu and variance to check for convergence
+Plots mu and variance in a time series plot to check for convergence of the
+computed data (i.e. Full-Covariance Gaussian VB Empirical Likelihood
+Posterior)
 }
 \examples{
 \dontrun{
