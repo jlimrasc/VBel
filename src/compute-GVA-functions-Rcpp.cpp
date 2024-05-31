@@ -93,7 +93,7 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     
     // Set up for normal distribution
     // From: https://eigen.tuxfamily.org/dox/classEigen_1_1DenseBase.html#a3340c9b997f5b53a0131cf927f93b54c
-    std::default_random_engine generator{static_cast<long unsigned int>(time(0))};
+    std::default_random_engine generator{ static_cast<unsigned int>(time(0)) };
     std::normal_distribution<double> distribution(0,1);
     auto normal_dist = [&] (double) {return distribution(generator);};
 
