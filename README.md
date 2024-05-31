@@ -106,6 +106,7 @@ T2 <- 500 # Number of iterations for AEL
 # Excecute functions
 ansAELRcpp <- compute_AEL(th, h, lam0, a, z, T2)
 ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
+diagnostic_plot(ansGVARcppPure) # Plot the results to check for convergence
 ```
 
 * * *
