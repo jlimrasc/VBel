@@ -4,60 +4,83 @@
 \alias{compute_AEL}
 \title{Compute the Adjusted Empirical Likelihood}
 \usage{
-compute_AEL(th, h, lam0, a, z, iters, useR_forz, returnH)
+compute_AEL(th, h, lam0, a, z, iters = 500, returnH = FALSE)
 }
 \arguments{
-\item{th}{Vector or scalar theta}
+\item{th}{p x 1 parameter vector to evaluate the AEL function at}
 
-\item{h}{User-defined function, outputs array}
+\item{h}{User-defined moment-condition function. Note that output should be an (n-1) x K matrix where K is necessarily \eqn{\geq}{<=} p}
 
-\item{lam0}{Initial vector for lambda}
+\item{lam0}{Initial vector for Lagrange multiplier lambda}
 
-\item{a}{Scalar constant}
+\item{a}{Positive scalar adjustment constant}
 
-\item{z}{n-1 by d matrix}
+\item{z}{(n-1) x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n-1}} is a sequence of d-dimensional data vectors}
 
-\item{iters}{Number of iterations using Newton-Raphson for estimation of lambda (default: 500)}
+\item{iters}{Number of iterations using Newton-Raphson for estimation of lambda. Default: \code{500}}
 
-\item{useR_forz}{Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)}
-
-\item{returnH}{Whether to return calculated values of h, H matrix and lambda}
+\item{returnH}{Whether to return calculated values of h, H matrix and lambda. Default: `FALSE}
 }
 \value{
 A numeric value for the Adjusted Empirical Likelihood function
 computed evaluated at a given theta value
 }
 \description{
-Evaluates the AEL for a given data set, moment conditions and parameter values
+Evaluates the Log-Adjusted Empirical Likelihood (AEL) (Chen, Variyath, and Abraham 2008) for a given data set, moment conditions and parameter values.
+The AEL function is formulated as
+\deqn{
+    \log \text{AEL}(\boldsymbol{\theta}) = \max_{\mathbf{w}'} \sum\limits_{i=1}^{n+1} \log(w_i'),
+}
+where \eqn{\mathbf{z}_{n+1}} is a pseudo-observation that satisfies
+\deqn{
+    h(\mathbf{z}_{n+1}, \boldsymbol{\theta}) = -\frac{a_n}{n} \sum\limits_{i=1}^n h(\mathbf{z}_i, \boldsymbol{\theta})
+}
+for some constant \eqn{a_n > 0} that may (but not necessarily) depend on \eqn{n}, and \eqn{\mathbf{w}' = (w_1', \ldots, w_n', w_{n+1}')} is a vector of probability weights that define a discrete distribution on \eqn{\{\mathbf{z}_1, \ldots, \mathbf{z}_n, \mathbf{z}_{n+1}\}}, and are subject to the constraints
+\deqn{
+    \sum\limits_{i=1}^{n+1} w_i' h(\mathbf{z}_i, \boldsymbol{\theta}) = 0, \quad \text{and} \quad \sum\limits_{i=1}^{n+1} w_i' = 1.
+}
+Here, the maximizer \eqn{\tilde{\mathbf{w}}} is of the form
+\deqn{
+    \tilde{w}_i = \frac{1}{n+1} \frac{1}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})},
+}
+where \eqn{\lambda_{\text{AEL}}} satisfies the constraints
+\deqn{
+    \frac{1}{n+1} \sum\limits_{i=1}^{n+1} \frac{h(\mathbf{z}_i, \boldsymbol{\theta})}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})} = 0, \quad \text{and} \quad
+    \frac{1}{n+1} \sum\limits_{i=1}^{n+1} \frac{1}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})} = 1.
+}
+}
+\details{
+Note that theta (\code{th}) is a p-dimensional vector, \code{h} is a K-dimensional vector and K \eqn{\geq}{<=} p
 }
 \examples{
-# Generate toy variables
+# Generating 30 data points from a simple linear-regression model
 set.seed(1)
 x     <- runif(30, min = -5, max = 5)
-elip  <- rnorm(30, mean = 0, sd = 1)
-y     <- 0.75 - x + elip
+vari  <- rnorm(30, mean = 0, sd = 1)
+y     <- 0.75 - x + vari
+z <- cbind(x, y)
 
-# Set initial values for AEL computation
 lam0  <- matrix(c(0,0), nrow = 2)
 th    <- matrix(c(0.8277, -1.0050), nrow = 2)
+
+# Specify AEL constant and Newton-Rhapson iteration
 a     <- 0.00001
 iters <- 10
 
-# Define Dataset and h-function
-z <- cbind(x, y)
+# Specify moment condition functions for linear regression
 h <- function(z, th) {
     xi      <- z[1]
     yi      <- z[2]
     h_zith  <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
     matrix(h_zith, nrow = 2)
 }
-ansAELRcpp <- compute_AEL(th, h, lam0, a, z, iters, useR_forz = TRUE)
+result <- compute_AEL(th, h, lam0, a, z, iters)
 }
 \references{
-Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and
-Accurate Empirical Likelihood Inference. Journal of the American Statistical
-Association, 1–13. \doi{doi:10.1080/01621459.2023.2169701}
+Chen, J., Variyath, A. M., and Abraham, B. (2008), “Adjusted Empirical
+Likelihood and its Properties,” Journal of Computational and Graphical
+Statistics, 17, 426–443. Pages 2,3,4,5,6,7 \doi{doi:10.1198/106186008X321068}
 }
 \author{
-Wei Chang Yu, Jeremy Lim
+Weichang Yu, Jeremy Lim
 }

@@ -1,15 +1,40 @@
 #' Compute the Adjusted Empirical Likelihood
 #' 
-#' Evaluates the AEL for a given data set, moment conditions and parameter values
+#' @description
+#' Evaluates the Log-Adjusted Empirical Likelihood (AEL) (Chen, Variyath, and Abraham 2008) for a given data set, moment conditions and parameter values.
+#' The AEL function is formulated as
+#' \deqn{
+#'     \log \text{AEL}(\boldsymbol{\theta}) = \max_{\mathbf{w}'} \sum\limits_{i=1}^{n+1} \log(w_i'),
+#' }
+#' where \eqn{\mathbf{z}_{n+1}} is a pseudo-observation that satisfies
+#' \deqn{
+#'     h(\mathbf{z}_{n+1}, \boldsymbol{\theta}) = -\frac{a_n}{n} \sum\limits_{i=1}^n h(\mathbf{z}_i, \boldsymbol{\theta})
+#' }
+#' for some constant \eqn{a_n > 0} that may (but not necessarily) depend on \eqn{n}, and \eqn{\mathbf{w}' = (w_1', \ldots, w_n', w_{n+1}')} is a vector of probability weights that define a discrete distribution on \eqn{\{\mathbf{z}_1, \ldots, \mathbf{z}_n, \mathbf{z}_{n+1}\}}, and are subject to the constraints
+#' \deqn{
+#'     \sum\limits_{i=1}^{n+1} w_i' h(\mathbf{z}_i, \boldsymbol{\theta}) = 0, \quad \text{and} \quad \sum\limits_{i=1}^{n+1} w_i' = 1.
+#' }
+#' Here, the maximizer \eqn{\tilde{\mathbf{w}}} is of the form
+#' \deqn{
+#'     \tilde{w}_i = \frac{1}{n+1} \frac{1}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})},
+#' }
+#' where \eqn{\lambda_{\text{AEL}}} satisfies the constraints
+#' \deqn{
+#'     \frac{1}{n+1} \sum\limits_{i=1}^{n+1} \frac{h(\mathbf{z}_i, \boldsymbol{\theta})}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})} = 0, \quad \text{and} \quad
+#'     \frac{1}{n+1} \sum\limits_{i=1}^{n+1} \frac{1}{1 + \lambda_{\text{AEL}}^\top h(\mathbf{z}_i, \boldsymbol{\theta})} = 1.
+#' }
 #' 
-#' @param th        Vector or scalar theta
-#' @param h         User-defined function, outputs array
-#' @param lam0      Initial vector for lambda
-#' @param a         Scalar constant
-#' @param z         n-1 by d matrix
-#' @param iters     Number of iterations using Newton-Raphson for estimation of lambda (default: 500)
-#' @param useR_forz Bool whether to calculate the function first in R (True) or call the function in C (False) (default: True)
-#' @param returnH   Whether to return calculated values of h, H matrix and lambda
+#' @details
+#' Note that theta (`th`) is a p-dimensional vector, `h` is a K-dimensional vector and K \eqn{\geq}{<=} p
+#' 
+#' 
+#' @param th        p x 1 parameter vector to evaluate the AEL function at
+#' @param h         User-defined moment-condition function. Note that output should be an (n-1) x K matrix where K is necessarily \eqn{\geq}{<=} p
+#' @param lam0      Initial vector for Lagrange multiplier lambda
+#' @param a         Positive scalar adjustment constant
+#' @param z         (n-1) x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n-1}} is a sequence of d-dimensional data vectors
+#' @param iters     Number of iterations using Newton-Raphson for estimation of lambda. Default: `500`
+#' @param returnH   Whether to return calculated values of h, H matrix and lambda. Default: `FALSE
 #'
 #' @return A numeric value for the Adjusted Empirical Likelihood function 
 #' computed evaluated at a given theta value
@@ -18,77 +43,95 @@
 #' @importFrom Rcpp sourceCpp
 #' @export
 #' 
-#' @author Wei Chang Yu, Jeremy Lim
-#' @references Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and 
-#' Accurate Empirical Likelihood Inference. Journal of the American Statistical 
-#' Association, 1–13. \doi{doi:10.1080/01621459.2023.2169701}
+#' @author Weichang Yu, Jeremy Lim
+#' @references Chen, J., Variyath, A. M., and Abraham, B. (2008), “Adjusted Empirical
+#' Likelihood and its Properties,” Journal of Computational and Graphical
+#' Statistics, 17, 426–443. Pages 2,3,4,5,6,7 \doi{doi:10.1198/106186008X321068}
 #' 
 #' @examples
-#' # Generate toy variables
+#' # Generating 30 data points from a simple linear-regression model
 #' set.seed(1)
 #' x     <- runif(30, min = -5, max = 5)
-#' elip  <- rnorm(30, mean = 0, sd = 1)
-#' y     <- 0.75 - x + elip
-#' 
-#' # Set initial values for AEL computation
+#' vari  <- rnorm(30, mean = 0, sd = 1)
+#' y     <- 0.75 - x + vari
+#' z <- cbind(x, y)
+#'
 #' lam0  <- matrix(c(0,0), nrow = 2)
 #' th    <- matrix(c(0.8277, -1.0050), nrow = 2)
+#' 
+#' # Specify AEL constant and Newton-Rhapson iteration
 #' a     <- 0.00001
 #' iters <- 10
 #' 
-#' # Define Dataset and h-function
-#' z <- cbind(x, y)
+#' # Specify moment condition functions for linear regression
 #' h <- function(z, th) {
 #'     xi      <- z[1]
 #'     yi      <- z[2]
 #'     h_zith  <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
 #'     matrix(h_zith, nrow = 2)
 #' }
-#' ansAELRcpp <- compute_AEL(th, h, lam0, a, z, iters, useR_forz = TRUE)
-compute_AEL <- function(th, h, lam0, a, z, iters, useR_forz, returnH) {
+#' result <- compute_AEL(th, h, lam0, a, z, iters)
+compute_AEL <- function(th, h, lam0, a, z, iters = 500, returnH = FALSE) {
     
     # -----------------------------
     # Default values
     # -----------------------------
-    if (missing(iters)) { iters <- 500 }
-    if (missing(useR_forz)){ useR_forz <- TRUE }
-    if (missing(returnH)){ returnH <- FALSE }
+    # if (missing(iters)) { iters <- 500 }
+    # if (missing(useR_forz)){ useR_forz <- TRUE }
+    # if (missing(returnH)){ returnH <- FALSE }
     
-    if (!useR_forz) {
-        res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, iters)
+    # if (!useR_forz) {
+    #     res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, iters)
+    #     
+    # } else if (useR_forz) {
+    #     p <- ncol(z)
+    #     n <- nrow(z) + 1
+    #     h_sum <- 0
+    #     H_Zth <- c()
+    # 
+    #     for (i in 1:(n - 1)) {
+    #         zi <- matrix(z[i, ], nrow = p) # Row of z as vertical vector
+    #         h_zith <- h(zi, th)
+    #         
+    #         h_sum <- h_sum + h_zith # For h(zn,th)
+    #         H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
+    #     }
+    #     
+    #     h_znth <- -a / (n - 1) * h_sum
+    #     H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
+    #     res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
+    #     
+    # } else {
+    #     warning("Error: Incorrect input for useR_forz")
+    #     return()
+    # }
+    
+    p <- ncol(z)
+    n <- nrow(z) + 1
+    h_sum <- 0
+    H_Zth <- c()
+    
+    for (i in 1:(n - 1)) {
+        zi <- matrix(z[i, ], nrow = p) # Row of z as vertical vector
+        h_zith <- h(zi, th)
         
-    } else if (useR_forz) {
-        p <- ncol(z)
-        n <- nrow(z) + 1
-        h_sum <- 0
-        H_Zth <- c()
-
-        for (i in 1:(n - 1)) {
-            zi <- matrix(z[i, ], nrow = p) # Row of z as vertical vector
-            h_zith <- h(zi, th)
-            
-            h_sum <- h_sum + h_zith # For h(zn,th)
-            H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
-        }
-        
-        h_znth <- -a / (n - 1) * h_sum
-        H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
-        res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
-        
-    } else {
-        warning("Error: Incorrect input for useR_forz")
-        return()
+        h_sum <- h_sum + h_zith # For h(zn,th)
+        H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
     }
+    
+    h_znth <- -a / (n - 1) * h_sum
+    H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
+    res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
     
     if (!returnH) {
         res$log_AEL
-    } else if (!useR_forz) {
-        return(list(
-            "log_AEL" = res[[1]],
-            "lambda" = res[[2]],
-            "h_arr" = array(unlist(res[[3]]), dim = c(1, ncol(z), nrow(z) + 1)),
-            "H" = res[[4]]
-        ))
+    # } else if (!useR_forz) {
+    #     return(list(
+    #         "log_AEL" = res[[1]],
+    #         "lambda" = res[[2]],
+    #         "h_arr" = array(unlist(res[[3]]), dim = c(1, ncol(z), nrow(z) + 1)),
+    #         "H" = res[[4]]
+    #     ))
     } else {
         return(list(
             "log_AEL" = res[[1]],

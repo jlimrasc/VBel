@@ -29,8 +29,8 @@ Eigen::MatrixXd compute_nabC_ELBO_Rcpp(const Eigen::VectorXd &gmu, const Eigen::
 Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Function delthh, 
                                         const Eigen::VectorXd &theta, Rcpp::Function h, 
                                         const Eigen::VectorXd &lam0, const Eigen::MatrixXd &z, 
-                                        int n, double a, int p, int T2, int i_out) {
-    Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T2); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
+                                        int n, double a, int p, int T_AEL, int i_out) {
+    Rcpp::List res = compute_AEL_Rcpp_inner(theta, h, lam0, a, z, T_AEL); // list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
     Eigen::MatrixXd lambda              = res["lambda"];
     std::vector<Eigen::VectorXd> h_arr  = res["h_arr"];
     Eigen::VectorXd hznth               = h_arr[n-1];
@@ -74,7 +74,7 @@ std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, co
 Rcpp::List compute_GVA_Rcpp_inner_full(
         Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh,
         Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, 
-        double rho, double elip, double a, int T, int T2, int p, int verbosity){
+        double rho, double elip, double a, int T_SDG, int T_AEL, int p, int verbosity){
 
     Eigen::VectorXd Egmu    = Eigen::VectorXd::Zero(p);
     Eigen::VectorXd gmu     = Eigen::VectorXd::Zero(p);
@@ -82,7 +82,7 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     Eigen::MatrixXd EgC     = Eigen::MatrixXd::Zero(p,p);
     Eigen::MatrixXd EdelC   = Eigen::MatrixXd::Zero(p,p);
     Eigen::VectorXd mu_t    = mu;
-    Eigen::MatrixXd mu_arr  = Eigen::MatrixXd::Zero(p,T+1);
+    Eigen::MatrixXd mu_arr  = Eigen::MatrixXd::Zero(p,T_SDG+1);
     mu_arr.col(0)           = mu_t; // Can save row vector to column?
     Eigen::MatrixXd C_t     = C;        // Covariance Cholesky
     std::vector<Eigen::MatrixXd> C_arr = {C_t}; // No preallocation?
@@ -97,12 +97,12 @@ Rcpp::List compute_GVA_Rcpp_inner_full(
     std::normal_distribution<double> distribution(0,1);
     auto normal_dist = [&] (double) {return distribution(generator);};
 
-    Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T, p, normal_dist );                  // I    - Draw xi
+    Eigen::MatrixXd xi = Eigen::MatrixXd::NullaryExpr(T_SDG, p, normal_dist );              // I    - Draw xi
     
-    for (int i = 0; i < T; i++) {
-        Eigen::VectorXd th = mu_t + C_t * xi.row(i).transpose();                           // II   - Set theta
+    for (int i = 0; i < T_SDG; i++) {
+        Eigen::VectorXd th = mu_t + C_t * xi.row(i).transpose();                            // II   - Set theta
         gmu = compute_nabmu_ELBO_Rcpp(delth_logpi, delthh, th, h, 
-                                       lam0, z, n, a, p, T2, i);
+                                       lam0, z, n, a, p, T_AEL, i);
         // Rcpp::List res = Rcpp::List::create(_["gmu"] = gmu);
         // return(res);
         Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);                              // IV   - Accumulate gradients

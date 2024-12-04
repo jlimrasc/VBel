@@ -35,7 +35,7 @@ test_that("GVA outputs right length, 10x10", {
     
     # Set other initial values
     delth_logpi <- function(theta) {-0.0001 * theta}
-    elip    <- 10^-5
+    epsil    <- 10^-5
     T       <- 5 # Number of iterations for GVA
     T2      <- 5 # Number of iterations for AEL
     rho     <- 0.9
@@ -45,8 +45,8 @@ test_that("GVA outputs right length, 10x10", {
     # Main
     # -----------------------------
     set.seed(seedNum)
-    ansGVARcppHalf <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = FALSE)
-    ansGVARcppPure <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2, fullCpp = TRUE)
+    ansGVARcppHalf <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, T, T2, fullCpp = FALSE)
+    ansGVARcppPure <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, T, T2, fullCpp = TRUE)
     
     # Testing for length
     # (floating point errors and different random number generation between 
