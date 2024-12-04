@@ -73,39 +73,6 @@
 #' result <- compute_AEL(th, h, lam0, a, z, iters)
 compute_AEL <- function(th, h, lam0, a, z, iters = 500, returnH = FALSE) {
     
-    # -----------------------------
-    # Default values
-    # -----------------------------
-    # if (missing(iters)) { iters <- 500 }
-    # if (missing(useR_forz)){ useR_forz <- TRUE }
-    # if (missing(returnH)){ returnH <- FALSE }
-    
-    # if (!useR_forz) {
-    #     res <- compute_AEL_Rcpp_inner_wrap(th, h, lam0, a, z, iters)
-    #     
-    # } else if (useR_forz) {
-    #     p <- ncol(z)
-    #     n <- nrow(z) + 1
-    #     h_sum <- 0
-    #     H_Zth <- c()
-    # 
-    #     for (i in 1:(n - 1)) {
-    #         zi <- matrix(z[i, ], nrow = p) # Row of z as vertical vector
-    #         h_zith <- h(zi, th)
-    #         
-    #         h_sum <- h_sum + h_zith # For h(zn,th)
-    #         H_Zth <- rbind(H_Zth, t(h_zith)) # Build up H(Z,th)
-    #     }
-    #     
-    #     h_znth <- -a / (n - 1) * h_sum
-    #     H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
-    #     res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
-    #     
-    # } else {
-    #     warning("Error: Incorrect input for useR_forz")
-    #     return()
-    # }
-    
     p <- ncol(z)
     n <- nrow(z) + 1
     h_sum <- 0
@@ -125,13 +92,6 @@ compute_AEL <- function(th, h, lam0, a, z, iters = 500, returnH = FALSE) {
     
     if (!returnH) {
         res$log_AEL
-    # } else if (!useR_forz) {
-    #     return(list(
-    #         "log_AEL" = res[[1]],
-    #         "lambda" = res[[2]],
-    #         "h_arr" = array(unlist(res[[3]]), dim = c(1, ncol(z), nrow(z) + 1)),
-    #         "H" = res[[4]]
-    #     ))
     } else {
         return(list(
             "log_AEL" = res[[1]],
