@@ -90,6 +90,7 @@ x    <- runif(30, min = -5, max = 5)
 vari <- rnorm(30, mean = 0, sd = 1)
 y    <- 0.75 - x + vari
 lam0 <- matrix(c(0,0), nrow = 2)
+th   <- matrix(c(0.8277, -1.0050), nrow = 2)
 z    <- cbind(x, y)
 
 # Specify moment condition functions for linear regression and its corresponding derivative
@@ -125,15 +126,12 @@ rho       <- 0.9
 # -----------------------------
 # Excecute functions
 # -----------------------------
-resultHalfR <-compute_GVA(mu, C0, h, delthh, delth_logpi, z, lam0, 
-rho, epsil, a, SDG_iters, AEL_iters, fullCpp = FALSE)
-resultPureC <-compute_GVA(mu, C0, h, delthh, delth_logpi, z, lam0, 
-rho, epsil, a, SDG_iters, AEL_iters, fullCpp = TRUE)
+ansAELRcpp <- compute_AEL(th, h, lam0, a, z, AEL_iters)
 
-# Excecute functions
-ansAELRcpp <- compute_AEL(th, h, lam0, a, z, T2)
-ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, a, T, T2)
-diagnostic_plot(ansGVARcppPure) # Plot the results to check for convergence
+resultGVA <-compute_GVA(mu, C0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, 
+SDG_iters, AEL_iters)
+
+diagnostic_plot(resultGVA) # Plot the results to check for convergence
 ```
 
 ------------------------------------------------------------------------
