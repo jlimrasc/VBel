@@ -17,7 +17,6 @@
 #' @param a             Positive scalar adjustment constant. For more accurate calculations, small values are recommended
 #' @param SDG_iters     Number of Stochastic Gradient-Descent iterations for optimising mu and C. Default: 10,000
 #' @param AEL_iters     Number of iterations using Newton-Raphson for optimising AEL lambda. Default: 500
-#' @param fullCpp       Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp). Default: TRUE
 #' @param verbosity     Integer for how often to print updates on current iteration number. Default:500
 #'
 #' @returns A list containing:  \enumerate{
@@ -83,112 +82,24 @@
 #' # -----------------------------
 #' # Main
 #' # -----------------------------
-#' resultHalfR <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
+#' result <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
 #' rho, epsil, a, SDG_iters, AEL_iters)
-#' resultPureC <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
-#' rho, epsil, a, SDG_iters, AEL_iters, fullCpp = TRUE)
 #' 
 compute_GVA <- function(mu0, C0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, 
-                        SDG_iters = 10000, AEL_iters = 500, fullCpp = TRUE, 
-                        verbosity = 500) {
+                        SDG_iters = 10000, AEL_iters = 500, verbosity = 500) {
     # Initialise values
-    returnAll   <- FALSE
 
     p           <- nrow(C0)
     
-    if (fullCpp) {
-        res <- compute_GVA_Rcpp_inner_full(mu0, C0, h, delthh, delth_logpi, z, lam0, 
-                                           rho, epsil, a, SDG_iters, AEL_iters, p, verbosity)
-        res$mu_FC   <- matrix(res$mu_FC, nrow = p, ncol = 1)
-        res$Egmu    <- matrix(res$Egmu, nrow = p, ncol = 1)
-        res$delmu   <- matrix(res$delmu, nrow = p, ncol = 1)
-        res$Edelmu  <- matrix(res$Edelmu, nrow = p, ncol = 1)
-        res$gmu     <- matrix(res$gmu, nrow = p, ncol = 1)
-
-        
-        # Store
-        mu_arr  <- res$mu_arr
-        C_arr   <- array(unlist(res$C_arr), dim = c(dim(C0), SDG_iters+1))
-        res$C_arr <- C_arr
-
-    } else {
-        Egmu        <- numeric(p)
-        Edelmu      <- numeric(p)
-        EgC         <- matrix(0, nrow = p, ncol = p)
-        EdelC       <- matrix(0, nrow = p, ncol = p)
-        mu_t        <- mu0
-        mu_arr      <- matrix(0, nrow = p, ncol = SDG_iters + 1)#array(dim = c(dim(mu_t), SDG_iters+1))
-        mu_arr[,1]  <- mu_t
-        C_t         <- C0        # Covariance Cholesky
-        C_arr       <- array(dim = c(dim(C_t), SDG_iters + 1))
-        C_arr[,,1]  <- C_t
-        M           <- matrix(1, p, p)
-        n           <- nrow(z) + 1
-        xi          <- matrix(stats::rnorm(SDG_iters * p), SDG_iters, p)        # I     - Draw xi
-        
-        for (i in 1:(SDG_iters)) {
-            th      <- mu_t + C_t %*% xi[i,]                                    # II    - Set theta
-            gmu     <- compute_nabmu_ELBO_RcppfromR(delth_logpi, delthh, 
-                                                    th, h, lam0, z, 
-                                                    n, a, AEL_iters)            # III   - Compute g_{mu}^{t+1}
-            res <- compute_GVA_Rcpp_inner_IVtoXII(rho, epsil, Egmu, Edelmu, EgC, 
-                                                  EdelC, gmu, mu_t, C_t, xi, M, 
-                                                  p, i - 1)                     # IV-XII
-            
-            # Overwrite with new values
-            mu_t    <- res[[1]]
-            C_t     <- res[[2]]
-            Egmu    <- res[[3]]
-            delmu   <- res[[4]]
-            Edelmu  <- res[[5]]
-            gC_t    <- res[[6]]
-            EgC     <- res[[7]]
-            delC    <- res[[8]]
-            gmu     <- res[[9]]
-            # Store
-            mu_arr[,i + 1]   <- mu_t
-            C_arr[,,i + 1]   <- C_t
-            if (verbosity && i %% verbosity == 0) { cat("Iteration:", i, "\n") }
-        }
-        res <- list(
-            "mu_FC"  = mu_t,
-            "C_FC"   = C_t,
-            "mu_arr" = mu_arr,
-            "C_arr"  = C_arr,
-            "gmu"    = gmu,
-            "Egmu"   = Egmu,
-            "delmu"  = delmu,
-            "Edelmu" = Edelmu,
-            "gC_t"   = gC_t, 
-            "EgC"    = EgC, 
-            "delC"   = delC
-        )
-    }
+    res <- compute_GVA_Rcpp_inner_full(mu0, C0, h, delthh, delth_logpi, z, lam0, 
+                                       rho, epsil, a, SDG_iters, AEL_iters, p, verbosity)
     
-    if (!returnAll) {
-        res2 <- list(
-            "mu_FC"  = res$mu_FC,
-            "C_FC"   = res$C_FC,
-            "mu_arr" = res$mu_arr,
-            "C_arr"  = res$C_arr
-        )
-        return(res2)
-    } else {
-        return(res)
-    }
-}
-
-compute_nabmu_ELBO_RcppfromR <- function(delth_logpi, delthh, theta, h, lam0, z, n, a, AEL_iters) {
-    res <- compute_AEL(theta, h, lam0, a, z, AEL_iters, returnH = TRUE) 
-    # Returns a list("log_AEL" = log_AEL[1, 1], "lambda" = lambda, "h_arr" = h_arr, "H" = H_Zth)
-    lambda <- res$"lambda"
-    h_arr <- res$"h_arr"
-    hznth <- h_arr[, , n]
-    
-    # Calculate gradient LogAEL with respect to theta
-    nabth_logAEL <- 0 # Matrix
-    for (i in 1:(n-1)) {
-        nabth_logAEL <- nabth_logAEL - (1/(1 + t(lambda) %*% h_arr[,,i]) - (a/(n-1)) / (1 + t(lambda) %*% hznth))[1] * (t(delthh(t(z[i,]), theta)) %*% lambda)
-    }
-    nabmu_ELBO <- nabth_logAEL + delth_logpi(theta)
+    # Return necessary values
+    res2 <- list(
+        "mu_FC"  = matrix(res$mu_FC, nrow = p, ncol = 1),
+        "C_FC"   = res$C_FC,
+        "mu_arr" = res$mu_arr,
+        "C_arr"  = array(unlist(res$C_arr), dim = c(dim(C0), SDG_iters+1))
+    )
+    return(res2)
 }

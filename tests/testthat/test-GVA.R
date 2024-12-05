@@ -45,31 +45,23 @@ test_that("GVA outputs right length, 2x2", {
     # Main
     # -----------------------------
     set.seed(1)
-    ansGVARcppHalf <-compute_GVA(mu0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, T, T2, fullCpp = FALSE)
-    set.seed(1)
-    ansGVARcppPure <-compute_GVA(mu0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, T, T2, fullCpp = TRUE)
+    ansGVARcpp <-compute_GVA(mu0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, T, T2)
 
     # Testing for length
     # (floating point errors and different random number generation between 
     # R & C++ make it difficult to test for number similarities)
-    expect_length(ansGVARcppPure$mu_FC, p)
-    expect_length(ansGVARcppHalf$mu_FC, p)
-    
-    expect_length(ansGVARcppPure$mu_arr, (T+1)*p)
-    expect_length(ansGVARcppHalf$mu_arr, (T+1)*p)
-    
-    expect_length(ansGVARcppPure$C_FC, p*p)
-    expect_length(ansGVARcppHalf$C_FC, p*p)
-    
+    expect_length(ansGVARcpp$mu_FC, p)
+
+    expect_length(ansGVARcpp$mu_arr, (T+1)*p)
+
+    expect_length(ansGVARcpp$C_FC, p*p)
+
     # C_FC is upper triangular
-    expect_equal(ansGVARcppHalf$C_FC[upper.tri(ansGVARcppHalf$C_FC)],0)
-    expect_equal(ansGVARcppPure$C_FC[upper.tri(ansGVARcppPure$C_FC)],0)
+    expect_equal(ansGVARcpp$C_FC[upper.tri(ansGVARcpp$C_FC)],0)
     
-    expect_length(ansGVARcppPure$C_arr, (T+1)*p*p)
-    expect_length(ansGVARcppHalf$C_arr, (T+1)*p*p)
+    expect_length(ansGVARcpp$C_arr, (T+1)*p*p)
     
-    expect_length(ansGVARcppHalf, 4)
-    expect_length(ansGVARcppPure, 4)
+    expect_length(ansGVARcpp, 4)
 
     set.seed(NULL) # Reset seed
 })

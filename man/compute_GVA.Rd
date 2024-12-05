@@ -17,7 +17,6 @@ compute_GVA(
   a,
   SDG_iters = 10000,
   AEL_iters = 500,
-  fullCpp = TRUE,
   verbosity = 500
 )
 }
@@ -45,8 +44,6 @@ compute_GVA(
 \item{SDG_iters}{Number of Stochastic Gradient-Descent iterations for optimising mu and C. Default: 10,000}
 
 \item{AEL_iters}{Number of iterations using Newton-Raphson for optimising AEL lambda. Default: 500}
-
-\item{fullCpp}{Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp). Default: TRUE}
 
 \item{verbosity}{Integer for how often to print updates on current iteration number. Default:500}
 }
@@ -112,10 +109,8 @@ rho       <- 0.9
 # -----------------------------
 # Main
 # -----------------------------
-resultHalfR <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
-rho, epsil, a, SDG_iters, AEL_iters, fullCpp = FALSE)
-resultPureC <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
-rho, epsil, a, SDG_iters, AEL_iters, fullCpp = TRUE)
+result <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
+rho, epsil, a, SDG_iters, AEL_iters)
 
 }
 \references{

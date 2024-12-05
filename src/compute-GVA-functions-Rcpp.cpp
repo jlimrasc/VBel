@@ -50,25 +50,25 @@ Eigen::VectorXd compute_nabmu_ELBO_Rcpp(Rcpp::Function delth_logpi, Rcpp::Functi
     return nabmu_ELBO;
 }
 
-// [[Rcpp::export]]
-std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, const double elip, Eigen::VectorXd Egmu, Eigen::VectorXd Edelmu, 
-                                       Eigen::MatrixXd EgC, Eigen::MatrixXd EdelC, Eigen::VectorXd gmu, 
-                                       Eigen::VectorXd mu_t, Eigen::MatrixXd C_t, 
-                                       const Eigen::MatrixXd xi, Eigen::MatrixXd M, const int p, const int i) {
-    
-    Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
-    Eigen::VectorXd delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
-    mu_t = mu_t + delmu;                                        // VI    - Update mean
-    Edelmu = rho * Edelmu + (1 - rho) * delmu.cwiseProduct(delmu);      // VII   - Accumulate updates
-    Eigen::MatrixXd gC_t = (compute_nabC_ELBO_Rcpp(gmu, xi.row(i), C_t)).triangularView<Eigen::Lower>();          // VIII  - Compute g_C^{t+1}
-    EgC = rho * EgC + (1 - rho) * gC_t.cwiseProduct(gC_t);           // IX    - Accumulate gradients
-    Eigen::MatrixXd delC    = ((EdelC + elip * M).cwiseSqrt().array() / (EgC + elip * M).cwiseSqrt().array() * gC_t.array()).matrix();     // X     - Compute update
-    C_t     = C_t + delC;                            // XI    - Update covariance Cholesky
-    EgC     = rho * EgC + (1 - rho) * delC.cwiseProduct(delC);        // XII   - Accumulate updates
-        
-    std::vector<Eigen::MatrixXd> res = {mu_t, C_t, Egmu, delmu, Edelmu, gC_t, EgC, delC, gmu};
-    return res;
-}
+// // [[Rcpp::export]]
+// std::vector<Eigen::MatrixXd> compute_GVA_Rcpp_inner_IVtoXII(const double rho, const double elip, Eigen::VectorXd Egmu, Eigen::VectorXd Edelmu, 
+//                                        Eigen::MatrixXd EgC, Eigen::MatrixXd EdelC, Eigen::VectorXd gmu, 
+//                                        Eigen::VectorXd mu_t, Eigen::MatrixXd C_t, 
+//                                        const Eigen::MatrixXd xi, Eigen::MatrixXd M, const int p, const int i) {
+//     
+//     Egmu = rho * Egmu + (1 - rho) * gmu.cwiseProduct(gmu);      // IV   - Accumulate gradients
+//     Eigen::VectorXd delmu = (((Edelmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array() / (Egmu + elip * Eigen::VectorXd::Ones(p)).cwiseSqrt().array()) * gmu.array()).matrix(); // V     - Compute update
+//     mu_t = mu_t + delmu;                                        // VI    - Update mean
+//     Edelmu = rho * Edelmu + (1 - rho) * delmu.cwiseProduct(delmu);      // VII   - Accumulate updates
+//     Eigen::MatrixXd gC_t = (compute_nabC_ELBO_Rcpp(gmu, xi.row(i), C_t)).triangularView<Eigen::Lower>();          // VIII  - Compute g_C^{t+1}
+//     EgC = rho * EgC + (1 - rho) * gC_t.cwiseProduct(gC_t);           // IX    - Accumulate gradients
+//     Eigen::MatrixXd delC    = ((EdelC + elip * M).cwiseSqrt().array() / (EgC + elip * M).cwiseSqrt().array() * gC_t.array()).matrix();     // X     - Compute update
+//     C_t     = C_t + delC;                            // XI    - Update covariance Cholesky
+//     EgC     = rho * EgC + (1 - rho) * delC.cwiseProduct(delC);        // XII   - Accumulate updates
+//         
+//     std::vector<Eigen::MatrixXd> res = {mu_t, C_t, Egmu, delmu, Edelmu, gC_t, EgC, delC, gmu};
+//     return res;
+// }
     
 // [[Rcpp::export]]
 Rcpp::List compute_GVA_Rcpp_inner_full(
