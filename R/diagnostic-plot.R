@@ -151,5 +151,5 @@ diagnostic_plot <- function(dataList, muList, cList) {
         )
     }
     
-    return(variance_arr)
+    #return(variance_arr)
 }

@@ -4,22 +4,20 @@
 \alias{compute_AEL}
 \title{Compute the Adjusted Empirical Likelihood}
 \usage{
-compute_AEL(th, h, lam0, a, z, iters = 500, returnH = FALSE)
+compute_AEL(th, h, lam0, a, z, iters = 500)
 }
 \arguments{
 \item{th}{p x 1 parameter vector to evaluate the AEL function at}
 
-\item{h}{User-defined moment-condition function. Note that output should be an (n-1) x K matrix where K is necessarily \eqn{\geq}{<=} p}
+\item{h}{User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p}
 
 \item{lam0}{Initial vector for Lagrange multiplier lambda}
 
 \item{a}{Positive scalar adjustment constant}
 
-\item{z}{(n-1) x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n-1}} is a sequence of d-dimensional data vectors}
+\item{z}{n x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n}} is a sequence of d-dimensional data vectors}
 
 \item{iters}{Number of iterations using Newton-Raphson for estimation of lambda. Default: \code{500}}
-
-\item{returnH}{Whether to return calculated values of h, H matrix and lambda. Default: `FALSE}
 }
 \value{
 A numeric value for the Adjusted Empirical Likelihood function
@@ -78,7 +76,7 @@ result <- compute_AEL(th, h, lam0, a, z, iters)
 }
 \references{
 Chen, J., Variyath, A. M., and Abraham, B. (2008), “Adjusted Empirical
-Likelihood and its Properties,” Journal of Computational and Graphical
+Likelihood and its Properties”, Journal of Computational and Graphical
 Statistics, 17, 426–443. Pages 2,3,4,5,6,7 \doi{doi:10.1198/106186008X321068}
 }
 \author{

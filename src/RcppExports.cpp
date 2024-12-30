@@ -44,8 +44,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_GVA_Rcpp_inner_full
-Rcpp::List compute_GVA_Rcpp_inner_full(Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh, Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, double rho, double elip, double a, int T_SDG, int T_AEL, int p, int verbosity);
-RcppExport SEXP _VBel_compute_GVA_Rcpp_inner_full(SEXP muSEXP, SEXP CSEXP, SEXP hSEXP, SEXP delthhSEXP, SEXP delth_logpiSEXP, SEXP zSEXP, SEXP lam0SEXP, SEXP rhoSEXP, SEXP elipSEXP, SEXP aSEXP, SEXP T_SDGSEXP, SEXP T_AELSEXP, SEXP pSEXP, SEXP verbositySEXP) {
+Rcpp::List compute_GVA_Rcpp_inner_full(Eigen::VectorXd mu, Eigen::MatrixXd C, Rcpp::Function h, Rcpp::Function delthh, Rcpp::Function delth_logpi, Eigen::MatrixXd z, Eigen::VectorXd lam0, double rho, double elip, double a, int T_SGD, int T_AEL, int p, int verbosity);
+RcppExport SEXP _VBel_compute_GVA_Rcpp_inner_full(SEXP muSEXP, SEXP CSEXP, SEXP hSEXP, SEXP delthhSEXP, SEXP delth_logpiSEXP, SEXP zSEXP, SEXP lam0SEXP, SEXP rhoSEXP, SEXP elipSEXP, SEXP aSEXP, SEXP T_SGDSEXP, SEXP T_AELSEXP, SEXP pSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -59,11 +59,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< double >::type elip(elipSEXP);
     Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< int >::type T_SDG(T_SDGSEXP);
+    Rcpp::traits::input_parameter< int >::type T_SGD(T_SGDSEXP);
     Rcpp::traits::input_parameter< int >::type T_AEL(T_AELSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
     Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T_SDG, T_AEL, p, verbosity));
+    rcpp_result_gen = Rcpp::wrap(compute_GVA_Rcpp_inner_full(mu, C, h, delthh, delth_logpi, z, lam0, rho, elip, a, T_SGD, T_AEL, p, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }

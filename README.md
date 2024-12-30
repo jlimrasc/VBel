@@ -119,7 +119,7 @@ mu0   <- matrix(unname(reslm$coefficients),2,1)
 C0    <- unname(t(chol(vcov(reslm))))
 
 # Specify details for ADADELTA (Stochastic Gradient-Descent)
-SDG_iters <- 10000
+SGD_iters <- 10000
 epsil     <- 10^-5
 rho       <- 0.9
 
@@ -129,7 +129,7 @@ rho       <- 0.9
 ansAELRcpp <- compute_AEL(th, h, lam0, a, z, AEL_iters)
 
 resultGVA <-compute_GVA(mu, C0, h, delthh, delth_logpi, z, lam0, rho, epsil, a, 
-SDG_iters, AEL_iters)
+SGD_iters, AEL_iters)
 
 diagnostic_plot(resultGVA) # Plot the results to check for convergence
 ```

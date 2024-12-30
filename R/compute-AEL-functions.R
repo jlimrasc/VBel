@@ -29,12 +29,11 @@
 #' 
 #' 
 #' @param th        p x 1 parameter vector to evaluate the AEL function at
-#' @param h         User-defined moment-condition function. Note that output should be an (n-1) x K matrix where K is necessarily \eqn{\geq}{<=} p
+#' @param h         User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p
 #' @param lam0      Initial vector for Lagrange multiplier lambda
 #' @param a         Positive scalar adjustment constant
-#' @param z         (n-1) x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n-1}} is a sequence of d-dimensional data vectors
+#' @param z         n x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n}} is a sequence of d-dimensional data vectors
 #' @param iters     Number of iterations using Newton-Raphson for estimation of lambda. Default: `500`
-#' @param returnH   Whether to return calculated values of h, H matrix and lambda. Default: `FALSE
 #'
 #' @return A numeric value for the Adjusted Empirical Likelihood function 
 #' computed evaluated at a given theta value
@@ -45,7 +44,7 @@
 #' 
 #' @author Weichang Yu, Jeremy Lim
 #' @references Chen, J., Variyath, A. M., and Abraham, B. (2008), “Adjusted Empirical
-#' Likelihood and its Properties,” Journal of Computational and Graphical
+#' Likelihood and its Properties”, Journal of Computational and Graphical
 #' Statistics, 17, 426–443. Pages 2,3,4,5,6,7 \doi{doi:10.1198/106186008X321068}
 #' 
 #' @examples
@@ -71,7 +70,7 @@
 #'     matrix(h_zith, nrow = 2)
 #' }
 #' result <- compute_AEL(th, h, lam0, a, z, iters)
-compute_AEL <- function(th, h, lam0, a, z, iters = 500, returnH = FALSE) {
+compute_AEL <- function(th, h, lam0, a, z, iters = 500) {
     
     p <- ncol(z)
     n <- nrow(z) + 1
@@ -90,14 +89,6 @@ compute_AEL <- function(th, h, lam0, a, z, iters = 500, returnH = FALSE) {
     H_Zth <- rbind(H_Zth, t(h_znth)) # Last row of H is h(zn,th)
     res <- compute_AEL_Rcpp_inner_prez(th, H_Zth, lam0, a, z, iters)
     
-    if (!returnH) {
-        res$log_AEL
-    } else {
-        return(list(
-            "log_AEL" = res[[1]],
-            "lambda" = res[[2]],
-            "h_arr" = array(t(H_Zth), dim = c(1, ncol(H_Zth), n)),
-            "H" = H_Zth
-        ))
-    }
+    # Return value
+    res$log_AEL
 }
