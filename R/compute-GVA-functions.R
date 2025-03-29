@@ -7,9 +7,9 @@
 #'
 #' @param mu0           p x 1 initial vector of Gaussian VB mean
 #' @param C0            p x p initial lower triangular matrix of Gaussian VB Cholesky
-#' @param h             User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p
-#' @param delthh        User-defined first-order derivative of moment-condition function. Note that output should be a K x p  matrix of h(zi,th) with respect to theta
-#' @param delth_logpi   User-defined first-order derivative of log-prior function. Note that output should be a p x 1 vector
+#' @param h             User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
+#' @param delthh        User-defined first-order derivative of moment-condition function. Note that output should be a K x p  matrix of h(zi,th) with respect to theta. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
+#' @param delth_logpi   User-defined first-order derivative of log-prior function. Note that output should be a p x 1 vector. Input format for h should be (th) the parameter vector
 #' @param z             Data matrix, n x d matrix
 #' @param lam0          Initial vector for Lagrange multiplier lambda
 #' @param rho           Scalar numeric beteen 0 to 1. ADADELTA accumulation constant
@@ -50,15 +50,15 @@
 #' z    <- cbind(x, y)
 #' 
 #' # Specify moment condition functions for linear regression and its corresponding derivative
-#' h    <- function(z, th) {
-#'     xi     <- z[1]
-#'     yi     <- z[2]
+#' h    <- function(zi, th) {
+#'     xi     <- zi[1]
+#'     yi     <- zi[2]
 #'     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
 #'     matrix(h_zith, nrow = 2)
 #' }
 #' 
-#' delthh <- function(z, th) {
-#'     xi <- z[1]
+#' delthh <- function(zi, th) {
+#'     xi <- zi[1]
 #'     matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
 #' }
 #' 

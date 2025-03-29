@@ -29,7 +29,7 @@
 #' 
 #' 
 #' @param th        p x 1 parameter vector to evaluate the AEL function at
-#' @param h         User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p
+#' @param h         User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
 #' @param lam0      Initial vector for Lagrange multiplier lambda
 #' @param a         Positive scalar adjustment constant
 #' @param z         n x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n}} is a sequence of d-dimensional data vectors
@@ -53,7 +53,7 @@
 #' x     <- runif(30, min = -5, max = 5)
 #' vari  <- rnorm(30, mean = 0, sd = 1)
 #' y     <- 0.75 - x + vari
-#' z <- cbind(x, y)
+#' z     <- cbind(x, y)
 #'
 #' lam0  <- matrix(c(0,0), nrow = 2)
 #' th    <- matrix(c(0.8277, -1.0050), nrow = 2)
@@ -63,9 +63,9 @@
 #' iters <- 10
 #' 
 #' # Specify moment condition functions for linear regression
-#' h <- function(z, th) {
-#'     xi      <- z[1]
-#'     yi      <- z[2]
+#' h <- function(zi, th) {
+#'     xi      <- zi[1]
+#'     yi      <- zi[2]
 #'     h_zith  <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
 #'     matrix(h_zith, nrow = 2)
 #' }
