@@ -9,7 +9,9 @@ compute_AEL(th, h, lam0, a, z, iters = 500)
 \arguments{
 \item{th}{p x 1 parameter vector to evaluate the AEL function at}
 
-\item{h}{User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector}
+\item{h}{User-defined moment-condition function.
+Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{>=} p.
+Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector}
 
 \item{lam0}{Initial vector for Lagrange multiplier lambda}
 
@@ -48,7 +50,7 @@ where \eqn{\lambda_{\text{AEL}}} satisfies the constraints
 }
 }
 \details{
-Note that theta (\code{th}) is a p-dimensional vector, \code{h} is a K-dimensional vector and K \eqn{\geq}{<=} p
+Note that theta (\code{th}) is a p-dimensional vector, \code{h} is a K-dimensional vector and K \eqn{\geq}{>=} p
 }
 \examples{
 # Generating 30 data points from a simple linear-regression model

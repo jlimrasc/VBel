@@ -7,9 +7,14 @@
 #'
 #' @param mu0           p x 1 initial vector of Gaussian VB mean
 #' @param C0            p x p initial lower triangular matrix of Gaussian VB Cholesky
-#' @param h             User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
-#' @param delthh        User-defined first-order derivative of moment-condition function. Note that output should be a K x p  matrix of h(zi,th) with respect to theta. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
-#' @param delth_logpi   User-defined first-order derivative of log-prior function. Note that output should be a p x 1 vector. Input format for h should be (th) the parameter vector
+#' @param h             User-defined moment-condition function. 
+                     #' Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{>=} p. 
+                     #' Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
+#' @param delthh        User-defined first-order derivative of moment-condition function. 
+                     #' Note that output should be a K x p  matrix of h(zi,th) with respect to theta. 
+                     #' Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
+#' @param delth_logpi   User-defined first-order derivative of log-prior function. 
+                     #' Note that output should be a p x 1 vector. Input format for h should be (th) the parameter vector
 #' @param z             Data matrix, n x d matrix
 #' @param lam0          Initial vector for Lagrange multiplier lambda
 #' @param rho           Scalar numeric beteen 0 to 1. ADADELTA accumulation constant

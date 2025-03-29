@@ -25,11 +25,13 @@
 #' }
 #' 
 #' @details
-#' Note that theta (`th`) is a p-dimensional vector, `h` is a K-dimensional vector and K \eqn{\geq}{<=} p
+#' Note that theta (`th`) is a p-dimensional vector, `h` is a K-dimensional vector and K \eqn{\geq}{>=} p
 #' 
 #' 
 #' @param th        p x 1 parameter vector to evaluate the AEL function at
-#' @param h         User-defined moment-condition function. Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{<=} p. Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
+#' @param h         User-defined moment-condition function. 
+                 #' Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{>=} p. 
+                 #' Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector
 #' @param lam0      Initial vector for Lagrange multiplier lambda
 #' @param a         Positive scalar adjustment constant
 #' @param z         n x d data matrix. Note that \eqn{\{z_i\}_{i=1}^{n}} is a sequence of d-dimensional data vectors
