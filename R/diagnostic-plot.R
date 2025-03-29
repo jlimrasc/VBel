@@ -72,8 +72,9 @@ diagnostic_plot <- function(dataList, muList, cList) {
         if (p <= 3) {
             cList <- matrix(c(1, 1, 1, p), ncol = 2)
         } else {
-            cList <- matrix(c(1, p, floor(p / 2), 
-                              1, floor(p / 2), floor(p / 2) + 1), 
+            cList <- matrix(c(1, p, 
+                              floor(p / 2), 1, 
+                              floor(p / 2), floor(p / 2) + 1), 
                             ncol = 2)
         }
     }
