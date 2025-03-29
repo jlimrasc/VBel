@@ -15,82 +15,44 @@
 //
 
 // Functions
-Eigen::VectorXd get_wi_arr_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::VectorXd &tild_lam, int n) {
-    // Store wi for use in D in P
-    Eigen::VectorXd wi_arr(n);
-    for (int i = 0; i < n; i++) {
-        wi_arr(i) = pow((1 + tild_lam.transpose() * h_list[i]),-1);
-    }
-    return wi_arr;
-}
-
-// -----------------------------
-// Compute dF
-// -----------------------------
-Eigen::VectorXd get_dF_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::VectorXd &wi_arr, int n, int d) {
-    // #' @param wi_arr Array of vectors of wi(th, lam~)
-    double wi, vi;
-    Eigen::VectorXd dF = Eigen::VectorXd::Zero(d);
-    
-    for (int i = 0; i < n; i++) {
-        
-        // Evaluate vi
-        wi = wi_arr(i);
-        if (pow(wi,-1) >= 1.0/(double)n) {
-            vi = wi;
-        } else {
-            vi = 2 * n - pow(n,2) / wi;
-        }
-        dF += vi * h_list[i]; // Calculate sum for this iteration of dF
-    }
-    return dF;
-}
-
-// -----------------------------
-// Compute d2F
-// -----------------------------
-Eigen::MatrixXd get_d2F_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &wi_arr, int n, int d) {
-    // Build diagonal matrix
-    // Diagonal matrix changes with respect to lambda's current guess so need 
-    // to recompute each iteration
-    Eigen::VectorXd D_arr(n);
-    Eigen::MatrixXd D(n,n); // no need P(d,d), 
-    double wi, vi2;
-    
-    // Evaluate vi2
-    for (int i = 0; i < n; i++) {
-        wi = wi_arr[i];
-        if (pow(wi,-1) >= 1.0/(double)n) {
-            vi2 = wi;
-        } else {
-            vi2 = n;
-        }
-        D_arr[i] = pow(vi2,2);
-    }
-    D = D_arr.asDiagonal();
-    
-    // Calculate P (i.e. d2F)
-    return -H_Zth.transpose() * D * H_Zth;
-}
-
-
-Eigen::MatrixXd compute_lambda_Rcpp(const std::vector<Eigen::VectorXd> &h_list, const Eigen::MatrixXd &H_Zth, const Eigen::VectorXd &lam0, double a, int T, int n, int d) {
+Eigen::MatrixXd compute_lambda_Rcpp(
+        const std::vector<Eigen::VectorXd> &h_list,
+        const Eigen::MatrixXd &H_Zth,  const Eigen::VectorXd &lam0,
+        double a, int T, int n, int d) {
     // # -----------------------------
     // # Compute lambda using modified Newton-Raphson
     // # -----------------------------
     Eigen::VectorXd lam_prev = lam0;
-    Eigen::VectorXd wi_arr(n), dF(d);
+    Eigen::VectorXd wi_arr = Eigen::VectorXd::Zero(n);
+    Eigen::VectorXd dF = Eigen::VectorXd::Zero(d);
+    double wi, vi, vi2;
     Eigen::MatrixXd P(d,d);
+    Eigen::VectorXd D_arr = Eigen::VectorXd::Zero(n);
+    Eigen::MatrixXd D(n,n);
+    
     
     for (int i = 0; i < T; i++) {
+        dF.setZero();
+        for (int i = 0; i < n; i++) {
+            wi = pow((1 + lam_prev.transpose() * h_list[i]),-1);
+            wi_arr(i) = wi;
+            
+            if (pow(wi,-1) >= 1.0/(double)n) {
+                vi = wi;
+                vi2 = wi;
+            } else {
+                vi = 2 * n - pow(n,2) / wi;
+                vi2 = n;
+            }
+            dF += vi * h_list[i]; // Calculate sum for this iteration of dF
+            D_arr[i] = pow(vi2,2);
+        }
         
-        wi_arr = get_wi_arr_Rcpp(h_list, lam_prev, n); // Wi
+        // DF
+        D = D_arr.asDiagonal();
         
-        dF = get_dF_Rcpp(h_list, wi_arr, n, d); // dF
-        
-        P = get_d2F_Rcpp(h_list, H_Zth, wi_arr, n, d); // d2F
-        
-        
+        // Calculate P (i.e. d2F)
+        P = -H_Zth.transpose() * D * H_Zth;
         lam_prev = lam_prev - P.inverse() * dF;
         
     }
