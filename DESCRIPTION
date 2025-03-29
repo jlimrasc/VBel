@@ -1,7 +1,7 @@
 Package: VBel
 Type: Package
 Title: Variational Bayes for Fast and Accurate Empirical Likelihood Inference
-Version: 1.1.1
+Version: 1.1.2
 Date: 2024-12-05
 Authors@R: c(
     person("Weichang", "Yu", , "weichang.yu@unimelb.edu.au", role = c("aut"),
