@@ -12,7 +12,8 @@ diagnostic_plot(dataList, muList, cList)
 \item{muList}{Array of indices of mu_arr to plot. (default:all)}
 
 \item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is
-(col,row) of variance matrix}
+(col,row) of variance matrix. (default: if data resolution (p) \eqn{\leq}{<=} 3, use (1, 1) and (1, p),
+else use (1, p), (p \%/\% 2, 1), (p \%/\% 2, p \%/\% 2 + 1))}
 }
 \value{
 Matrix of variance of C_FC
@@ -60,7 +61,7 @@ sigHat  <- 1/(n-2) * sumVal
 C_0     <- 1/sqrt(n) * t(chol(sigHat))
 
 # Specify details for ADADELTA (Stochastic Gradient-Descent)
-SDG_iters   <- 5 # Number of iterations for GVA
+SGD_iters   <- 5 # Number of iterations for GVA
 epsil       <- 10^-5
 rho         <- 0.9
 
@@ -69,7 +70,7 @@ rho         <- 0.9
 # -----------------------------
 # Compute GVA
 ansGVA <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, 
-a, SDG_iters, AEL_iters)
+a, SGD_iters, AEL_iters)
 
 # Plot graphs
 diagnostic_plot(ansGVA) # Plot all graphs
