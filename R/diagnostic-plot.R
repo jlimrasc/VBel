@@ -6,7 +6,7 @@
 #' 
 #'
 #' @param dataList  Named list of data generated from \link{compute_GVA}
-#' @param muList    Array of indices of mu_arr to plot. (default:all)
+#' @param muList    Vector of indices of mu_arr to plot. (default:all)
 #' @param cList     Matrix of indices of variance to plot, 2xn matrix, each row is 
                  #' (col,row) of variance matrix. (default: if data resolution (p) \eqn{\leq}{<=} 3, use (1, 1) and (1, p), 
                  #' else use (1, p), (p %/% 2, 1), (p %/% 2, p %/% 2 + 1))
