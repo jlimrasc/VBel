@@ -9,7 +9,7 @@ diagnostic_plot(dataList, muList, cList)
 \arguments{
 \item{dataList}{Named list of data generated from \link{compute_GVA}}
 
-\item{muList}{Array of indices of mu_arr to plot. (default:all)}
+\item{muList}{Vector of indices of mu_arr to plot. (default:all)}
 
 \item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is
 (col,row) of variance matrix. (default: if data resolution (p) \eqn{\leq}{<=} 3, use (1, 1) and (1, p),
