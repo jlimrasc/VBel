@@ -6,10 +6,12 @@
 #' 
 #'
 #' @param dataList  Named list of data generated from \link{compute_GVA}
-#' @param muList    Vector of indices of mu_arr to plot. (default:all)
+#' @param muList    Vector of indices of mu_arr to plot. (default: if data resolution (p) \eqn{\leq}{<=} 3, use all, 
+                 #' else use 1, \eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"} and p
 #' @param cList     Matrix of indices of variance to plot, 2xn matrix, each row is 
                  #' (col,row) of variance matrix. (default: if data resolution (p) \eqn{\leq}{<=} 3, use (1, 1) and (1, p), 
-                 #' else use (1, p), (p %/% 2, 1), (p %/% 2, p %/% 2 + 1))
+                 #' else use (1, p), (\eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"}, 1) and 
+                 #' (\eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"}, \eqn{\lfloor p/2 \rfloor+1}{"p \%/\% 2 + 1"}))
 #'
 #' @return Matrix of variance of C_FC
 #' @export
