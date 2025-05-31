@@ -15,7 +15,7 @@ Maintainer: \packageMaintainer{VBel}
 }
 \references{
 References: Yu, W., & Bondell, H. D. (2023), “Variational Bayes for Fast and Accurate Empirical Likelihood Inference”,
-Journal of the American Statistical Association, 17, 426–443. Page 3 \doi{doi:10.1080/01621459.2023.2169701}
+Journal of the American Statistical Association, 119(546), 1089–1101. Page 3 \doi{doi:10.1080/01621459.2023.2169701}
 }
 \keyword{ package }
 \seealso{
