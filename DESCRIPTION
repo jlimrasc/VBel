@@ -9,7 +9,7 @@ Authors@R: c(
   )
 Description: Computes the Gaussian variational approximation of the Bayesian 
     empirical likelihood posterior. This is an implementation of the function 
-    found in Yu, W., & Bondell, H. D. (2023)
+    found in Yu, W., & Bondell, H. D. (2023) <doi:10.1080/01621459.2023.2169701>
 License: GPL (>= 3)
 Imports: 
     Rcpp (>= 1.0.12),
