@@ -1,3 +1,7 @@
+# VBel 1.1.7
+
+-   Changed maintainer
+
 # VBel 1.1.6
 
 -   Updated RoxygenNote
