@@ -26,17 +26,13 @@ test_that("AEL outputs right output", {
     # -----------------------------
     # Main
     # -----------------------------
-    ansAELRcppprez  <- compute_AEL(th, h, lam0, a, z, useR_forz = TRUE)
-    ansAELRcpp      <- compute_AEL(th, h, lam0, a, z, useR_forz = FALSE)
+    result <- compute_AEL(th, h, lam0, a, z)
     
-    expect_length(ansAELRcppprez, 1)
-    expect_length(ansAELRcpp, 1)
+    expect_length(result, 1)
     
     # Testing for discrepencies, FALSE if the same (might be floating point errors even with rounding)
-    expect_equal(ansAELRcppprez, -106.45360424034257107)
-    expect_equal(ansAELRcpp,     -106.45360424034257107)
-    # expect_equal(round(ansAELRcpp,5), round(ansAELRcppprez,5))
-    
+    expect_equal(result, -106.45360424034257107)
+
     set.seed(NULL) # Reset seed
 })
 

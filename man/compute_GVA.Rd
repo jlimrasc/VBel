@@ -5,50 +5,52 @@
 \title{Compute the Full-Covariance Gaussian VB Empirical Likelihood Posterior}
 \usage{
 compute_GVA(
-  mu,
-  C,
+  mu0,
+  C0,
   h,
   delthh,
   delth_logpi,
   z,
   lam0,
   rho,
-  elip,
+  epsil,
   a,
-  iters,
-  iters2,
-  fullCpp,
-  verbosity
+  SGD_iters = 10000,
+  AEL_iters = 500,
+  verbosity = 500
 )
 }
 \arguments{
-\item{mu}{Column vector, initial value of Gaussian VB mean}
+\item{mu0}{p x 1 initial vector of Gaussian VB mean}
 
-\item{C}{Lower Triangular Matrix, initial value of Gaussian VB Cholesky}
+\item{C0}{p x p initial lower triangular matrix of Gaussian VB Cholesky}
 
-\item{h}{User-defined moment-condition function, outputs a k x 1 matrix containing the kth row of h. Function must take two arguments: zi and theta for h(zi,th)}
+\item{h}{User-defined moment-condition function.
+Note that output should be an n x K matrix where K is necessarily \eqn{\geq}{>=} p.
+Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector}
 
-\item{delthh}{User defined function, outputs k x p Jacobian matrix of h(zi,th) with respect to theta}
+\item{delthh}{User-defined first-order derivative of moment-condition function.
+Note that output should be a K x p  matrix of h(zi,th) with respect to theta.
+Input format for h should be (zi, th) were zi corresponds to the ith observation's data and th is the parameter vector}
 
-\item{delth_logpi}{User-defined function, outputs p x 1 matrix, derivative of log prior function}
+\item{delth_logpi}{User-defined first-order derivative of log-prior function.
+Note that output should be a p x 1 vector. Input format for h should be (th) the parameter vector}
 
-\item{z}{Data matrix, n-1 x d matrix}
+\item{z}{Data matrix, n x d matrix}
 
-\item{lam0}{Initial guess for lambda, k x 1 matrix}
+\item{lam0}{Initial vector for Lagrange multiplier lambda}
 
-\item{rho}{Scalar (between 0 to 1, reccomended to be close to 1) ADADELTA accumulation constant}
+\item{rho}{Scalar numeric beteen 0 to 1. ADADELTA accumulation constant}
 
-\item{elip}{Scalar numeric stability constant. Should be specified with a small value}
+\item{epsil}{Positive numeric scalar stability constant. Should be specified with a small value}
 
-\item{a}{Scalar AEL constant, must be >0, small values recommended}
+\item{a}{Positive scalar adjustment constant. For more accurate calculations, small values are recommended}
 
-\item{iters}{Number of iterations for GVA (default:10,000)}
+\item{SGD_iters}{Number of Stochastic Gradient-Descent iterations for optimising mu and C. Default: 10,000}
 
-\item{iters2}{Number of iterations for Log AEL (default:500)}
+\item{AEL_iters}{Number of iterations using Newton-Raphson for optimising AEL lambda. Default: 500}
 
-\item{fullCpp}{Bool whether to calculate the main section in cpp (TRUE) or only partially (FALSE, doing all the AEL calculations in R before handing values to cpp) (default: TRUE)}
-
-\item{verbosity}{Integer for how often to print updates on current iteration number (default:500)}
+\item{verbosity}{Integer for how often to print updates on current iteration number. To turn off, set to 0. Default:500}
 }
 \value{
 A list containing:  \enumerate{
@@ -57,9 +59,9 @@ size p x 1
 \item C_FC: VB Posterior Variance-Covariance (Cholesky) at
 final iteration. A lower-triangular matrix of size p x p
 \item mu_FC_arr: VB Posterior Mean for each iteration. A matrix
-of size p x (iters + 1)
+of size p x (SGD_iters + 1)
 \item C_FC_arr: VB Posterior Variance-Covariance (Cholesky) for
-each iteration. An array of size p x p x (iters + 1)
+each iteration. An array of size p x p x (SGD_iters + 1)
 }
 }
 \description{
@@ -68,51 +70,59 @@ a list of the final mean and variance-covariance along with an array of the
 in-between calculations at each iteration for analysis of convergence
 }
 \examples{
+# -----------------------------
+# Initialise Inputs
+# -----------------------------
+# Generating 30 data points from a simple linear-regression model
 set.seed(1)
 x    <- runif(30, min = -5, max = 5)
-elip <- rnorm(30, mean = 0, sd = 1)
-y    <- 0.75 - x + elip
+vari <- rnorm(30, mean = 0, sd = 1)
+y    <- 0.75 - x + vari
 lam0 <- matrix(c(0,0), nrow = 2)
-th   <- matrix(c(0.8277, -1.0050), nrow = 2)
-a    <- 0.00001
 z    <- cbind(x, y)
-h    <- function(z, th) {
-    xi     <- z[1]
-    yi     <- z[2]
+
+# Specify moment condition functions for linear regression and its corresponding derivative
+h    <- function(zi, th) {
+    xi     <- zi[1]
+    yi     <- zi[2]
     h_zith <- c(yi - th[1] - th[2] * xi, xi*(yi - th[1] - th[2] * xi))
     matrix(h_zith, nrow = 2)
 }
 
-delthh <- function(z, th) {
-    xi <- z[1]
+delthh <- function(zi, th) {
+    xi <- zi[1]
     matrix(c(-1, -xi, -xi, -xi^2), 2, 2)
 }
 
-n     <- 31
-reslm <- lm(y ~ x)
-mu    <- matrix(unname(reslm$coefficients),2,1)
-C_0   <- unname(t(chol(vcov(reslm))))
+# Specify derivative of log prior
+delth_logpi <- function(theta) { -0.0001 * mu0 }
 
-delth_logpi <- function(theta) { -0.0001 * mu }
-elip        <- 10^-5
-iters       <- 10
-iters2      <- 50
-rho         <- 0.9
+# Specify AEL constant and Newton-Rhapson iteration
+a         <- 0.00001
+AEL_iters <- 10
+
+# Specify initial values for GVA mean vector and Cholesky
+reslm <- lm(y ~ x)
+mu0   <- matrix(unname(reslm$coefficients),2,1)
+C0    <- unname(t(chol(vcov(reslm))))
+
+# Specify details for ADADELTA (Stochastic Gradient-Descent)
+SGD_iters <- 50
+epsil     <- 10^-5
+rho       <- 0.9
 
 # -----------------------------
 # Main
 # -----------------------------
-ansGVARcppHalf <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
-rho, elip, a, iters, iters2, fullCpp = FALSE)
-ansGVARcppPure <-compute_GVA(mu, C_0, h, delthh, delth_logpi, z, lam0, 
-rho, elip, a, iters, iters2, fullCpp = TRUE)
+result <-compute_GVA(mu0, C0, h, delthh, delth_logpi, z, lam0, 
+rho, epsil, a, SGD_iters, AEL_iters)
 
 }
 \references{
-Yu, W., & Bondell, H. D. (2023). Variational Bayes for Fast and
-Accurate Empirical Likelihood Inference. Journal of the American Statistical
+Yu, W., & Bondell, H. D. (2023). "Variational Bayes for Fast and
+Accurate Empirical Likelihood Inference", Journal of the American Statistical
 Association, 1–13. \doi{doi:10.1080/01621459.2023.2169701}
 }
 \author{
-Wei Chang Yu, Jeremy Lim
+Weichang Yu, Jeremy Lim
 }

@@ -9,10 +9,13 @@ diagnostic_plot(dataList, muList, cList)
 \arguments{
 \item{dataList}{Named list of data generated from \link{compute_GVA}}
 
-\item{muList}{Array of indices of mu_arr to plot. (default:all)}
+\item{muList}{Vector of indices of mu_arr to plot. (default: if data resolution (p) \eqn{\leq}{<=} 3, use all,
+else use 1, \eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"} and p}
 
 \item{cList}{Matrix of indices of variance to plot, 2xn matrix, each row is
-(col,row) of variance matrix}
+(col,row) of variance matrix. (default: if data resolution (p) \eqn{\leq}{<=} 3, use (1, 1) and (1, p),
+else use (1, p), (\eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"}, 1) and
+(\eqn{\lfloor p/2 \rfloor}{"p \%/\% 2"}, \eqn{\lfloor p/2 \rfloor+1}{"p \%/\% 2 + 1"}))}
 }
 \value{
 Matrix of variance of C_FC
@@ -23,49 +26,56 @@ computed data (i.e. Full-Covariance Gaussian VB Empirical Likelihood
 Posterior)
 }
 \examples{
-# Generate toy variables
+# -----------------------------
+# Initialise Inputs
+# -----------------------------
+# Generating 30 data points from a simple linear-regression model
 seedNum <- 100
 set.seed(seedNum)
 n       <- 100
 p       <- 10
 lam0    <- matrix(0, nrow = p)
-
-# Calculate z
 mean    <- rep(1, p)
 sigStar <- matrix(0.4, p, p) + diag(0.6, p)
 z       <- mvtnorm::rmvnorm(n = n-1, mean = mean, sigma = sigStar)
 
-# Calculate intermediate variables
+# Specify moment condition functions for linear regression and its corresponding derivative
+h       <- function(zi, th) { matrix(zi - th, nrow = 10) }
+delthh  <- function(z, th) { -diag(p) }
+
+# Specify derivative of log prior
+delth_logpi <- function(theta) {-0.0001 * theta}
+
+# Specify AEL constant and Newton-Rhapson iteration
+AEL_iters <- 5 # Number of iterations for AEL
+a         <- 0.00001
+
+# Specify initial values for GVA mean vector and Cholesky
 zbar    <- 1/(n-1) * matrix(colSums(z), nrow = p)
+mu_0    <- matrix(zbar, p, 1)
+
 sumVal  <- matrix(0, nrow = p, ncol = p)
 for (i in 1:p) {
 zi      <- matrix(z[i,], nrow = p)
 sumVal  <- sumVal + (zi - zbar) \%*\% matrix(zi - zbar, ncol = p)
 }
 sigHat  <- 1/(n-2) * sumVal
-
-# Initial values for GVA
-mu_0    <- matrix(zbar, p, 1)
 C_0     <- 1/sqrt(n) * t(chol(sigHat))
 
-# Define h-function
-h       <- function(zi, th) { matrix(zi - th, nrow = 10) }
+# Specify details for ADADELTA (Stochastic Gradient-Descent)
+SGD_iters   <- 5 # Number of iterations for GVA
+epsil       <- 10^-5
+rho         <- 0.9
 
-# Define h-gradient function
-delthh  <- function(z, th) { -diag(p) }
+# -----------------------------
+# Main
+# -----------------------------
+# Compute GVA
+ansGVA <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, epsil, 
+a, SGD_iters, AEL_iters)
 
-# Set other initial values
-delth_logpi <- function(theta) {-0.0001 * theta}
-elip    <- 10^-5
-T       <- 5 # Number of iterations for GVA
-T2      <- 5 # Number of iterations for AEL
-rho     <- 0.9
-a       <- 0.00001
-
-ansGVA <-compute_GVA(mu_0, C_0, h, delthh, delth_logpi, z, lam0, rho, elip, 
-a, T, T2, fullCpp = TRUE)
-
-diagnostic_plot(ansGVA)
-diagnostic_plot(ansGVA, muList = c(1,4))
-diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2))
+# Plot graphs
+diagnostic_plot(ansGVA) # Plot all graphs
+diagnostic_plot(ansGVA, muList = c(1,4)) # Limit number of graphs
+diagnostic_plot(ansGVA, cList = matrix(c(1,1, 5,6, 3,3), ncol = 2)) # Limit number of graphs
 }
